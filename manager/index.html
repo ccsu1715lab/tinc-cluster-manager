@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>内网穿透管理平台</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧菜单 -->
+        <nav class="sidebar">
+            <div class="logo">内网穿透管理</div>
+            <ul class="menu">
+                <li><a href="#" data-page="dashboard/dashboard">运行状态</a></li>
+                <li><a href="#" data-page="server-config/server-config">服务端配置</a></li>
+                <li><a href="#" data-page="client-config/client-config">客户端配置</a></li>
+                <li><a href="#" data-page="tinc-server/tinc-server">Tinc服务端</a></li>
+                <li><a href="#" data-page="tinc-client/tinc-client">Tinc客户端</a></li>
+            </ul>
+        </nav>
+
+        <!-- 右侧内容区 -->
+        <main class="content" id="contentContainer"></main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
