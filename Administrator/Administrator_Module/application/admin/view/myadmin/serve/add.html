@@ -1,0 +1,98 @@
+
+<style>
+    #add-form{
+    background-image: url(../../../../../assets/image/6.png);
+    background-size:100%;
+    padding: 31px;
+    position: relative;top: -16px;left: -2%;
+    width: 801px;
+    height: 556px;
+
+}
+
+.control-label{
+    width: auto;
+    font-size: 18px;
+    color:#f4f4f4cf;
+    text-align:center;
+    background-color:#4444445e;
+    position:relative;top:3px;left: 63px;
+}
+.form-control{
+    width:264px;
+    height: 40px;
+    border: 1px solid rgba(255,255,255,0.15);
+    font-size: 16px;
+    color:#eee;
+    background-color:#77777761;
+}
+
+#info {
+    border: 2px ;
+    border-radius: 25;
+    border-color: #f5f5f5;
+    border-style: dotted;
+    padding: 16px;
+    background: #4444449e;
+    background-size: cover;
+    display: none;text-align: left;position: relative;top:2%;left:auto;
+}
+
+
+
+</style>
+
+<form id="add-form" class="form-horizontal dark-title"  role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label for="c-server_name" class="col-xs-12 col-sm-2 control-label">服务器名称:</label>
+        <input id="c-server_name" type="text" name="row[server_name]" class="form-control" data-rule="required;"  style=" border-radius: 5px;position: relative;top:auto;left:38%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-Localadd" class="col-xs-12 col-sm-2 control-label">本地ip地址:</label>
+        <input id="c-Localadd" type="text" name="row[Localadd]" class="form-control" data-rule="required;"  style="border-radius: 5px;position: relative;top:auto;left:38%;">       
+    </div>
+
+    <div class="form-group">
+        <label for="c-Localport" class="col-xs-12 col-sm-2 control-label">本地端口</label>
+        <input id="c-Localport" type="text" name="row[Localport]" class="form-control" data-rule="required;"  style="border-radius: 5px;position: relative;top:auto;left:41%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-server_ip" class="col-xs-12 col-sm-2 control-label">接入服务器ip地址:</label>
+        <input id="c-server_ip" type="text" name="row[server_ip]" class="form-control" data-rule="required;unrenode"  style="border-radius: 5px;position: relative;top:auto;left:31%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-start_segment" class="col-xs-12 col-sm-2 control-label">起始网段:</label>
+        <input id="c-start_segment" type="text" name="row[start_segment]" class="form-control" data-rule="required;unrenode"  style="border-radius: 5px;position: relative;top:auto;left:40%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-end_segment" class="col-xs-12 col-sm-2 control-label">终止网段:</label>
+        <input id="c-end_segment" type="text" name="row[end_segment]" class="form-control" data-rule="required;unrenode"  style="border-radius: 5px;position: relative;top:auto;left:40%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-start_port" class="col-xs-12 col-sm-2 control-label">起始端口:</label>
+        <input id="c-start_port" type="text" name="row[start_port]" class="form-control" data-rule="required;unrenode"  style="border-radius: 5px;position: relative;top:auto;left:40%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-end_port" class="col-xs-12 col-sm-2 control-label">终止端口:</label>
+        <input id="c-end_port" type="text" name="row[end_port]" class="form-control" data-rule="required;unrenode"  style="border-radius: 5px;position: relative;top:auto;left:40%;">
+    </div>
+
+    <div class="form-group">
+        <label for="c-desc"class="col-xs-12 col-sm-2 control-label">备注:</label>
+        <textarea id="c-desc" data-rule=""  name="row[desc]" class="form-control"  style="border-radius: 5px;position: relative;top:auto;left:45%;"></textarea>
+    </div>
+
+
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+            <button type="submit" class="btn btn-success btn-embossed disabled btn-success-add">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+    </div>
+</form>

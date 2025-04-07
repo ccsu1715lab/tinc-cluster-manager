@@ -1,0 +1,189 @@
+
+<style>
+#conn_image
+{
+    width: 30px;
+    height: 30px;
+    border: 25px;
+    margin: 25px;
+    padding: 25px;
+    border-color: black;
+    position: relative;
+    left: -72px;
+    top: 27px;
+ 
+}
+
+#cpurate_image
+{
+    width: 30px;
+    height: 30px;
+    border: 25px;
+    margin: 25px;
+    padding: 25px;
+    border-color: black;
+    position: relative;
+    left: -72px;
+    top: 27px;
+}
+
+#memory_image
+{
+    width: 30px;
+    height: 30px;
+    border: 25px;
+    margin: 25px;
+    padding: 25px;
+    border-color: black;
+    position: relative;
+    top: 57px;
+    left: -85px;
+}
+
+#daemon_image
+{
+    width: 30px;
+    height: 30px;
+    border: 25px;
+    margin: 25px;
+    padding: 25px;
+    border-color: black;
+    position: relative;
+    top: 10px;
+    left: -59px;
+}
+
+
+@import url('https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+        .circular {
+            height: 100px;
+            width: 100px;
+            /* background: red; */
+            position: relative;
+            transform: scale(2); /* transform 属性向元素应用 2D 或 3D 转换。该属性允许我们对元素进行旋转、缩放、移动或倾斜。 */
+        }
+      
+        .data{  /* 定义动态计时容器样式*/
+            position: absolute;
+            transform:translate(-50%,-50%);
+            z-index: 10;
+        }
+		        .circular .inner {
+            position: absolute;
+            z-index: 4;
+            top: 34%;
+            left: 51%;
+            height: 80px;
+            width: 80px;
+            margin: -40px 0 0 -40px;
+            background: #dde6f0;
+            border-radius: 100%; 
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2); 
+        }
+
+                        
+
+        .circular .bar {
+            position: absolute;
+            top: -15%;
+            left: 1%;
+            height: 100%;
+            width: 100%;
+            background: #fff;
+            border-radius: 100%;
+            clip: rect(0px, 100px, 100px, 50px); 
+        }
+        .cpuprogress,.memoryprogress {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background: #fff;
+            border-radius: 100%;
+            clip: rect(0px, 50px, 100px, 0px);
+            background: green;
+        }
+        .circle .right {
+            z-index: 3;
+            transform: rotate(180deg);
+        }
+        #rotateBoxconn{
+            position:absolute;
+            top:-171%;
+            left: -46%;
+            width: 100px;
+            height: 100px;
+            margin: 30px;
+            background: gray;
+        }
+
+        #rotateBoxdaemon{
+            position:absolute;
+            top:157%;
+            left: -15%;
+            width: 100px;
+            height: 100px;
+            margin: 30px;
+            background: gray;
+        }
+        
+</style>
+<div class="panel panel-default panel-intro">
+    <textarea id="ids" class="hidden" value="{$ids}">{$ids}</textarea>
+        <div id="conn" style="    position: relative;top: 49px;left: 16%;">
+            <label style="position: absolute; left: -3%;font-weight: 600;font-size: 23px;top: 255%;">连接状态</label> 
+            <div id="conn_image"> 
+                <label id="connstatus" class="data connstatus_data"></label>
+                <div id="rotateBoxconn"></div>
+            </div>      
+        </div>
+
+        <div id="cpu" style="position: relative;top: -82px;left: 71%;">
+              <label style="font-weight: 600; font-size: 23px;position: absolute;top: 364%;left: -3%;">CPU利用率</label>
+              <div id="cpurate_image">
+                <div class="circular">
+                    <div class="inner"></div>
+                    <label id="cpurate" class="data cpurate_data"></label> <!-- 定义数据计时器容器 -->
+                    <div class="circle">
+                        <div class="bar left">
+                            <div class="progress cpuprogress" id="cpuleft-progress"></div>
+                        </div>
+                        <div class="bar right">
+                            <div class="progress cpuprogress" id="cpuright-progress"></div>
+                        </div>
+                    </div>
+                </div>
+              </div>          
+        </div>
+            
+        <div id="memory" style="position: relative; top: 89px;left: 15%;">
+            <label style="font-weight: 600; font-size: 23px;position: absolute;top: 417%;left: -3%;">内存利用率</label>
+            <div id="memory_image"><label id="memoryrate" class="data memory_data"></label> 
+                <div class="circular">
+                    <div class="inner"></div>
+                    <label id="memoryrate" class="data memory_data" ></label> 
+                    <div class="circle">
+                        <div class="bar left">
+                            <div class="progress memoryprogress" id="memoryleft-progress"></div>
+                        </div>
+                        <div class="bar right">
+                            <div class="progress memoryprogress" id="memoryright-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <div id="daemon" style="position: relative;top:-59px;left: 71%;">
+            <label style="font-weight: 600; font-size: 23px;position: absolute;top: 552%;left: -3%;">守护进程状态：</label>
+            <div id="daemon_image">
+                <label id="daemonstatus" class="data daemon_data"></label>
+                <div id="rotateBoxdaemon"></div>
+            </div>
+        </div>
+</div>
