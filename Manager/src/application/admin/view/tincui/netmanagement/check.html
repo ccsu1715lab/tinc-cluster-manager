@@ -1,0 +1,74 @@
+
+<style>
+    .p2{border-color: black;}
+    .p2{border-style: solid;}
+
+    .is-dialog #main {
+    background: #4440;
+}
+
+.panel-intro {
+    margin-bottom: 0;
+    background-color: #1a1a1a;
+    border: none;
+}
+
+body.is-dialog {
+     background: none; 
+}
+
+    html, body 
+    {
+    color: #fff;
+    min-height: 100%;
+    background-image: url(../../../../../assets/image/6.png);
+    }
+
+    td, th 
+    {
+    padding: 0;
+    background-color: #343434;
+    }
+</style>
+
+<div class="panel panel-default panel-intro">
+    <div class="tab-content">
+        <div class="tab-pane fade active in">
+            <div class="widget-body no-padding">
+            <div  id="title" style="text-align: center;">
+                <h2>内网{$netname}下的节点</h2>
+                <hr noshade class="p2">
+                <br>
+                <table id="table" class="table table-bordered table-hover table-striped" width="100%">
+                    <thead  class="table-dark table-striped">
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">设备id</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">接入服务器</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">所属内网</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">创建时间</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">节点名称</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">内网ip</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">节点状态</div><div class="fht-cell"></div></th>
+                       <th style="text-align: center; vertical-align: middle; " data-field="id"><div class="th-inner ">最近上线时间</div><div class="fht-cell"></div></th>
+                    </thead>
+                    <tbody>
+                      <div>
+                        {volist name="arr" id="vo"}
+                        <tr>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.sid}</td>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.server_name}</td>
+                            <td style="text-align: center; vertical-align: middle; "><a href="{:url('admin/tincui/nodemanagement',['sid'=>$vo.sid])}" target="_blank">{$vo.net_name}</a></td>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.esbtime}</td>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.node_name}</td>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.node_ip}</td>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.status}</td>
+                            <td style="text-align: center; vertical-align: middle; ">{$vo.uptime}</td>
+                        </tr>
+                       {/volist}
+                    </div>
+                    </tbody>
+                  </table>
+            </div>
+                </div>
+        </div>
+    </div>
+</div>

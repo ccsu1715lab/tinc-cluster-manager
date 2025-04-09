@@ -1,0 +1,136 @@
+<style>
+    #edit-form{
+        background-image: url(../../../../../assets/image/6.png);
+        background-size:100%;
+        padding: 31px;
+        position: relative;top: -16px;left: -2%;
+        width: 801px;
+        height: 556px;
+
+    }
+    .control-label{
+        width: auto;
+        font-size: 18px;
+        color:#f4f4f4cf;
+        text-align:center;
+        background-color:#4444445e;
+        position: relative;
+        top: -32px;
+        left: 63px;
+    }
+    .form-control{
+        width:264px;
+        height: 40px;
+        border: 1px solid rgba(255,255,255,0.15);
+        font-size: 16px;
+        color:#eee;
+        background-color:#77777761;
+    }
+
+    #radio{
+        position: relative;
+        top: -94px;
+        left: 33%;
+        color: #999;
+    }
+
+    #info {
+        border: 2px ;
+        border-radius: 25;
+        border-color: #f5f5f5;
+        border-style: dotted;
+        padding: 16px;
+        background: #4444449e;
+        background-size: cover;
+        display: none;text-align: left;position: relative;top:3%;left:auto;
+    }
+
+    p {
+        color: white;
+        font-size: medium;
+        font-style: normal;
+    }
+</style>
+<form id="edit-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+   
+   <h3><input id="servername" class="hidden"  type=" text" name="row[server_name]" value="{$servername}">Server:{$servername}</h3>
+    <h3><input id="netname" class="hidden" type="text" name="row[net_name]" value="{$netname}">Net:{$netname}</h3>
+
+    <div class="form-group" id="radio">
+        <div class="col-xs-12 col-sm-8">
+             <label for="pass"><input id="pass" type="radio" name="row[type]" value="updatepassword" checked="checked">修改密码</label>
+             <label for="node_name"><input id="node_name" type="radio" name="row[type]" value="updatenodename">修改节点名称</label>
+             <label for="node_ip"><input id="node_ip" type="radio" name="row[type]" value="updatenodeip">修改节点ip</label>
+         </div>
+    </div>
+
+  
+    <div class="form-group new_name">
+        <label for="sid"class="col-xs-12 col-sm-2 control-label">请输入sid:</label>
+        <div class="col-xs-12 col-sm-8">
+             <input id="sid" type="text" name="row[sid]" class="form-control" data-rule="required" style="border-radius: 5px;position: relative;
+             top: -39px;
+             left: 62%;" value="{$sid}">
+         </div>
+    </div>
+
+    <div class="form-group">
+        <label for="rowpass"class="col-xs-12 col-sm-2 control-label">请输入密码:</label>
+        <div class="col-xs-12 col-sm-8">
+             <input id="rowpass" type="password" name="row[pass]" class="form-control" data-rule="required;sidmatchpass" style=" border-radius: 5px;   position: relative;
+             top: -36px;
+             left: 59%;">
+         </div>
+    </div>
+
+    <div class="form-group tf-updatepassword">
+        <label for="c-password" class="col-xs-12 col-sm-2 control-label">请输入新密码:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-password" type="password" name="row[password]" class="form-control" value="" data-rule="required;password" style="  border-radius: 5px;  position: relative;
+            top: -33px;
+            left: 55%;">
+        </div>
+    </div>
+
+    <div class="form-group tf-updatenodename hidden">
+        <label for="c-node_name "class="col-xs-12 col-sm-2 control-label">请输入新的节点名称:</label>
+        <div class="col-xs-12 col-sm-8">
+             <input id="c-node_name" type="text" name="row[node_name]" class="form-control" data-rule="required;IsnodeRepeat" style=" border-radius: 5px;   position: relative;
+             top: -33px;
+             left: 44%;">
+         </div>
+    </div>
+
+    <div class="form-group tf-updatenodeip hidden">
+        <label for="c-node_ip"class="col-xs-12 col-sm-2 control-label">输入新的内网ip:</label>
+        <div class="col-xs-12 col-sm-8">
+             <input id="c-node_ip" type="text" name="row[node_ip]" class="form-control" data-rule="required;checkIPv4;IsipRepeat" style=" border-radius: 5px;   position: relative;
+             top: -33px;
+             left: 52%;" value="{$seg}">
+         </div>
+    </div>
+
+    <button type="button" class="btn btn-info" style="position:absolute;top:42%;left:43%;background-color:#00000029; font-size: medium;">温馨提示</button>
+<div id="info">
+    <p>1:与添加节点类似，表单提交后其状态会进入”配置中“，当客户端配置完成其状态会变为”已上线“。</p>
+    <p>2:同样，不管配置成功与否，系统都会提示您，当然也可以在”事件查询”中查看。</p>
+</div>
+
+    
+
+   
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-success btn-embossed disabled btn-success-edit" style="position: relative;top:-8px;left:30%;
+            font-size:medium;
+            font-style: normal;
+            
+            background-color: #0000007a;">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed" style="        position: relative;top:-9px;left:37%;
+            font-size:medium;
+            font-style: normal;
+            background-color: #0000007a;">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>

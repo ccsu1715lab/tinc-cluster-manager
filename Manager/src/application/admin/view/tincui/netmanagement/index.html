@@ -1,0 +1,97 @@
+<style>
+    
+    .table-hover > tbody > tr:hover {
+     background-color: unset; 
+}
+
+    .table-striped > tbody > tr:nth-of-type(odd) {
+   background-color: #77777763;
+ }
+
+ /*背景：body*/
+ body {
+    background-image: url(../../../../../assets/image/6.png);
+    font-size: 14px;
+    line-height: 1.5715;
+}
+
+
+     .panel-intro{
+    background-color: #444c6900;
+    position: relative;
+    top: auto;
+    left: auto;
+    height: auto;
+    width: auto;
+    color: #fff;
+ 
+     }
+
+
+     .form-control {
+    border-radius: 5px;
+    box-shadow: none;
+    border-color: #f5f5f5;
+    color: #f4f4f4;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #444444d4;
+}
+
+.btn-default {
+    background-color: #3d3d3d;
+    color: #f4f4f4;
+    border-color: #ddd;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #444444;
+    border-color: #f75444;
+}
+
+
+.btn-success {
+    color: #fff;
+    background-color: #444;
+    border-color: #078029;
+}/*刷新按钮*/
+.btn-primary {
+    color: #fff;
+    background-color: #444444;
+    border-color: #444c69;
+}
+
+/*顶部通事栏*/
+.skin-black-blue .main-header .navbar .nav > li > a {
+    color: #f5f5f5;
+}
+
+.skin-black-blue .main-header .navbar {
+    background-color: #1a1a1a;
+}
+ </style>
+
+<div class="panel panel-default panel-intro">
+    <div class="tab-content">
+        <div class="tab-pane fade active in">
+            <div class="widget-body no-padding">
+            <div  id="title" style="text-align: center;">
+                <h2 style="font-weight:lighter">内网管理</h2>
+                <br>
+                <br>
+            </div>
+            <div id="toolbar" class="toolbar">
+                <a href="javascript:;" class="btn btn-primary btn-refresh" title="刷新"><i class="fa fa-refresh"></i> </a> 
+                <a href="javascript:;" class="btn btn-success btn-add" title="添加"><i class="fa fa-plus"></i> 添加</a>
+                <a href="javascript:;" class="btn btn-danger btn-del btn-disabled disabled" title="删除"><i class="fa fa-trash"></i> 删除</a>
+            </div>
+                <table id="table" class="table table-bordered table-hover table-striped" width="100%">
+      
+
+                 </table>
+                </div>
+        </div>
+    </div>
+</div>
