@@ -6,21 +6,6 @@ start_service()
     service mysql start 
 }
 
-
-
-start_timer()
-{
-    echo "80" > /port.conf
-    timerdir="./timer/timer" 
-    chmod 777 $timerdir
-    if test -e $timerdir;then
-      nohup $timerdir > /dev/null 2>&1 &
-    else
-        echo "Error：$timerdir：no such file or directory"
-    fi
-}
-
-
 check_install()
 {
     install_url="localhost/install.php"
@@ -30,13 +15,10 @@ check_install()
     fi
 }
 
-
-
 main()
 {
     
     start_service 
-    start_timer
     check_install
 
  
