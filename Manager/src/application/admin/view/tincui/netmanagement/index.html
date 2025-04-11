@@ -1,86 +1,81 @@
 <style>
-    
-    .table-hover > tbody > tr:hover {
-     background-color: unset; 
-}
+    /* 新增全局样式 */
+    body {
+        background: linear-gradient(135deg, #f3f7ff 0%, #e8f1ff 100%);
+        font-family: 'Segoe UI', system-ui;
+    }
+
+    .panel-intro {
+        background: rgba(255,255,255,0.86);
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(208,222,255,0.5);
+        box-shadow: 0 12px 40px rgba(15,82,186,0.1);
+    }
+
+    /* 标题优化 */
+    #title h2 {
+        color: #1a3658;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(15,82,186,0.1);
+        background: linear-gradient(90deg, #1a4d8f, #2c6ed5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* 表格增强 */
+    .table {
+        --table-accent: rgba(208,222,255,0.1);
+        --table-hover: rgba(64,150,255,0.08);
+        border: 1px solid rgba(208,222,255,0.3);
+    }
 
     .table-striped > tbody > tr:nth-of-type(odd) {
-   background-color: #77777763;
- }
+        background-color: var(--table-accent);
+    }
 
- /*背景：body*/
- body {
-    background-image: url(../../../../../assets/image/6.png);
-    font-size: 14px;
-    line-height: 1.5715;
-}
+    .table-hover > tbody > tr:hover {
+        background-color: var(--table-hover);
+        transform: scale(1.002);
+        box-shadow: 0 4px 12px rgba(15,82,186,0.05);
+    }
 
+    /* 按钮组重构 */
+    .btn {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 8px;
+        letter-spacing: 0.5px;
+    }
 
-     .panel-intro{
-    background-color: #444c6900;
-    position: relative;
-    top: auto;
-    left: auto;
-    height: auto;
-    width: auto;
-    color: #fff;
- 
-     }
+    .btn-primary {
+        background: linear-gradient(135deg, #2c6ed5 0%, #1a4d8f 100%);
+        border: none;
+    }
 
+    .btn-success {
+        background: linear-gradient(135deg, #2c6ed5 0%, #4096ff 100%);
+        border: none;
+    }
 
-     .form-control {
-    border-radius: 5px;
-    box-shadow: none;
-    border-color: #f5f5f5;
-    color: #f4f4f4;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: #444444d4;
-}
+    .btn-danger {
+        background: linear-gradient(135deg, #ff4d4d 0%, #cc3636 100%);
+        border: none;
+    }
 
-.btn-default {
-    background-color: #3d3d3d;
-    color: #f4f4f4;
-    border-color: #ddd;
-}
-
-.btn-danger {
-    color: #fff;
-    background-color: #444444;
-    border-color: #f75444;
-}
-
-
-.btn-success {
-    color: #fff;
-    background-color: #444;
-    border-color: #078029;
-}/*刷新按钮*/
-.btn-primary {
-    color: #fff;
-    background-color: #444444;
-    border-color: #444c69;
-}
-
-/*顶部通事栏*/
-.skin-black-blue .main-header .navbar .nav > li > a {
-    color: #f5f5f5;
-}
-
-.skin-black-blue .main-header .navbar {
-    background-color: #1a1a1a;
-}
- </style>
+    /* 图标优化 */
+    .fa {
+        margin-right: 8px;
+        filter: drop-shadow(0 2px 2px rgba(15,82,186,0.1));
+    }
+</style>
 
 <div class="panel panel-default panel-intro">
     <div class="tab-content">
         <div class="tab-pane fade active in">
             <div class="widget-body no-padding">
             <div  id="title" style="text-align: center;">
-                <h2 style="font-weight:lighter">内网管理</h2>
-                <br>
-                <br>
+                <h2 style="font-weight:600">内网管理</h2>
+                <div style="margin:1rem auto; width:120px; height:3px; background:linear-gradient(90deg, rgba(208,222,255,0.5), #2c6ed5, rgba(208,222,255,0.5));"></div>
             </div>
             <div id="toolbar" class="toolbar">
                 <a href="javascript:;" class="btn btn-primary btn-refresh" title="刷新"><i class="fa fa-refresh"></i> </a> 

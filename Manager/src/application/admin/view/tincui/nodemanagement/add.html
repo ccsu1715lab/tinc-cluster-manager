@@ -1,62 +1,586 @@
 
 <style>
-    #add-form{
-    background-image: url(../../../../../assets/image/6.png);
-    background-size:100%;
-    padding: 31px;
-    position: relative;top: -16px;left: -2%;
-    width: 801px;
-    height: 556px;
-
-}
-
-.control-label{
-    width: auto;
-    font-size: 18px;
-    color:#f4f4f4cf;
-    text-align:center;
-    background-color:#4444445e;
-    position:relative;top:3px;left: 63px;
-}
-.form-control{
-    width:264px;
-    height: 40px;
-    border: 1px solid rgba(255,255,255,0.15);
-    font-size: 16px;
-    color:#eee;
-    background-color:#77777761;
-}
-
-#info {
-    border: 2px ;
-    border-radius: 25;
-    border-color: #f5f5f5;
-    border-style: dotted;
-    padding: 16px;
-    background: #4444449e;
-    background-size: cover;
-    display: none;text-align: left;position: relative;top:2%;left:auto;
-}
-
-p {
-    color: white;
-    font-size: medium;
-    font-style: normal;
-}
-
-option{
-        background-color: #444;
+    /* 背景与容器 */
+    #page {
+        background: linear-gradient(135deg, #f8fafc 0%, #e7f2ff 100%);
+        box-shadow: 0 12px 40px rgba(15,82,186,0.15);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 2rem;
+        border-radius: 15px;
     }
 
+    #add-form {
+        background: rgba(255,255,255,0.85);
+        border: 1px solid rgba(208,222,255,0.5);
+        box-shadow: 0 6px 20px rgba(15,82,186,0.08);
+        padding: 2.5rem 3rem;
+        border-radius: 12px;
+        position: relative;
+        width: 820px;      
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
+    /* 标题样式 */
+    #add-form::before {
+        content: "Tinc客户端配置";
+        display: block;
+        font-size: 24px;
+        color: #2c6ed5;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(44,110,213,0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    /* 输入控件 */
+    .form-control {
+        border: 2px solid #d0deff;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.95);
+        color: #1a3658;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* 修改缓动函数 */
+        box-shadow: 0 2px 8px rgba(44,110,213,0.1);  /* 新增基础阴影 */
+    }
+
+    .form-control:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(44,110,213,0.15);  /* 增强阴影 */
+        border-color: #a4c2f4;  /* 悬停边框色 */
+    }
+
+    .form-control:focus {
+        border-color: #2c6ed5;
+        box-shadow: 0 4px 20px rgba(44,110,213,0.2);
+        background: rgba(255,255,255,0.98);  /* 提升背景透明度 */
+    }
+
+    /* 标签联动效果 */
+    .form-group:focus-within .control-label {
+        -webkit-text-fill-color: #1a4d8f;  /* 深蓝色 */
+        text-shadow: 0 2px 4px rgba(28,77,143,0.2);
+    }
+
+    /* 下拉菜单动态箭头 */
+    select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232c6ed5'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 12px;
+        transition: background 0.3s ease;
+    }
+
+    select.form-control:hover {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a4d8f'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    }
+
+    /* 标签样式 */
+    .control-label {
+        color: #2c6ed5;
+        font-weight: 600;
+        background: linear-gradient(90deg, #1a3658 0%, #2c6ed5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        width: 160px;
+        text-align: right;
+        padding-right: 2rem;
+    }
+
+    /* 标题居中调整 */
+    #add-form::before {
+        text-align: center;
+        margin: 0 auto 1.5rem;
+        width: 100%;
+    }
+
+    /* 输入框对齐调整 */
+    .form-group > [class*="col-"] {
+        justify-content: flex-end; /* 右对齐 */
+        width: 100%;
+    }
+
+    .form-control {
+        margin-left: auto;
+        margin-right: 2rem;
+        width: 340px; /* 固定宽度 */
+    }
+        /* 调整表单组对齐方式 */
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* 改为左对齐 */
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+    
+        /* 标签容器调整 */
+        .col-xs-12.col-sm-2 {
+            flex: 0 0 160px;
+            padding-right: 2rem;
+            justify-content: flex-end; /* 标签右对齐 */
+        }
+    
+        /* 输入框容器调整 */
+        .col-xs-12.col-sm-8 {
+            flex: 0 0 340px;
+            justify-content: flex-start; /* 输入框左对齐 */
+            padding-left: 0;
+        }
+    
+        /* 统一输入框样式 */
+        .form-control {
+            width: 100% !important;
+            margin: 0;
+            transform: none;
+        }
+    
+        /* 修正按钮组定位 */
+        .layer-footer .col-sm-8 {
+            justify-content: center !important;
+            margin-left: 160px;
+        }
+
+    /* 调整表单组间距 */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+
+    /* 精确对齐输入容器 */
+    .form-group > [class*="col-"] {
+        width: calc(100% - 160px); /* 标签宽度补偿 */
+        justify-content: flex-end;
+        padding-right: 2rem;
+    }
+
+    /* 统一输入框样式 */
+    .form-control {
+        width: 340px !important;
+        margin: 0;
+        transform: translateX(12px); /* 微调对齐 */
+    }
+
+    /* 调整备注框 */
+    textarea.form-control {
+        height: 90px;
+        margin-top: 0.5rem;
+    }
+
+    /* 容器尺寸调整 */
+    #page {
+        width: 90%;
+        max-width: 780px; /* 从820px缩小 */
+        margin: 2rem auto;
+    }
+
+    #add-form {
+        width: 92%; /* 从100%缩小 */
+        padding: 2rem;
+        margin: 1.5rem auto; /* 保持垂直间距 */
+    }
+
+    /* 响应式调整 */
+    @media (min-width: 1200px) {
+        #page {
+            width: 85%;
+            max-width: 800px;
+        }
+    }
+    /* 标题样式 */
+    #add-form::before {
+        content: "Tinc客户端配置";
+        display: block;
+        font-size: 24px;
+        color: #2c6ed5;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(44,110,213,0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    /* 输入控件 */
+    .form-control {
+        border: 2px solid #d0deff;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.95);
+        color: #1a3658;
+        transition: all 0.25s ease;
+    }
+
+    /* 标签样式 */
+    .control-label {
+        color: #2c6ed5;
+        font-weight: 600;
+        background: linear-gradient(90deg, #1a3658 0%, #2c6ed5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        width: 160px;
+        text-align: right;
+        padding-right: 2rem;
+    }
+
+    /* 标题居中调整 */
+    #add-form::before {
+        text-align: center;
+        margin: 0 auto 1.5rem;
+        width: 100%;
+    }
+
+    /* 输入框对齐调整 */
+    .form-group > [class*="col-"] {
+        justify-content: flex-end; /* 右对齐 */
+        width: 100%;
+    }
+
+    .form-control {
+        margin-left: auto;
+        margin-right: 2rem;
+        width: 340px; /* 固定宽度 */
+    }
+        /* 调整表单组对齐方式 */
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* 改为左对齐 */
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+    
+        /* 标签容器调整 */
+        .col-xs-12.col-sm-2 {
+            flex: 0 0 160px;
+            padding-right: 2rem;
+            justify-content: flex-end; /* 标签右对齐 */
+        }
+    
+        /* 输入框容器调整 */
+        .col-xs-12.col-sm-8 {
+            flex: 0 0 340px;
+            justify-content: flex-start; /* 输入框左对齐 */
+            padding-left: 0;
+        }
+    
+        /* 统一输入框样式 */
+        .form-control {
+            width: 100% !important;
+            margin: 0;
+            transform: none;
+        }
+    
+        /* 修正按钮组定位 */
+        .layer-footer .col-sm-8 {
+            justify-content: center !important;
+            margin-left: 160px;
+        }
+
+    /* 调整表单组间距 */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+
+    /* 精确对齐输入容器 */
+    .form-group > [class*="col-"] {
+        width: calc(100% - 160px); /* 标签宽度补偿 */
+        justify-content: flex-end;
+        padding-right: 2rem;
+    }
+
+    /* 统一输入框样式 */
+    .form-control {
+        width: 340px !important;
+        margin: 0;
+        transform: translateX(12px); /* 微调对齐 */
+    }
+
+    /* 调整备注框 */
+    textarea.form-control {
+        height: 90px;
+        margin-top: 0.5rem;
+    }
+
+    /* 容器尺寸调整 */
+    #page {
+        width: 90%;
+        max-width: 780px; /* 从820px缩小 */
+        margin: 2rem auto;
+    }
+
+    #add-form {
+        width: 92%; /* 从100%缩小 */
+        padding: 2rem;
+        margin: 1.5rem auto; /* 保持垂直间距 */
+    }
+
+    /* 响应式调整 */
+    @media (min-width: 1200px) {
+        #page {
+            width: 85%;
+            max-width: 800px;
+        }
+    }
+    /* 标题样式 */
+    #add-form::before {
+        content: "Tinc客户端配置";
+        display: block;
+        font-size: 24px;
+        color: #2c6ed5;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(44,110,213,0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    /* 输入控件 */
+    .form-control {
+        border: 2px solid #d0deff;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.95);
+        color: #1a3658;
+        transition: all 0.25s ease;
+    }
+
+    /* 标签样式 */
+    .control-label {
+        color: #2c6ed5;
+        font-weight: 600;
+        background: linear-gradient(90deg, #1a3658 0%, #2c6ed5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        width: 160px;
+        text-align: right;
+        padding-right: 2rem;
+    }
+
+    /* 标题居中调整 */
+    #add-form::before {
+        text-align: center;
+        margin: 0 auto 1.5rem;
+        width: 100%;
+    }
+
+    /* 输入框对齐调整 */
+    .form-group > [class*="col-"] {
+        justify-content: flex-end; /* 右对齐 */
+        width: 100%;
+    }
+
+    .form-control {
+        margin-left: auto;
+        margin-right: 2rem;
+        width: 340px; /* 固定宽度 */
+    }
+        /* 调整表单组对齐方式 */
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* 改为左对齐 */
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+    
+        /* 标签容器调整 */
+        .col-xs-12.col-sm-2 {
+            flex: 0 0 160px;
+            padding-right: 2rem;
+            justify-content: flex-end; /* 标签右对齐 */
+        }
+    
+        /* 输入框容器调整 */
+        .col-xs-12.col-sm-8 {
+            flex: 0 0 340px;
+            justify-content: flex-start; /* 输入框左对齐 */
+            padding-left: 0;
+        }
+    
+        /* 统一输入框样式 */
+        .form-control {
+            width: 100% !important;
+            margin: 0;
+            transform: none;
+        }
+    
+        /* 修正按钮组定位 */
+        .layer-footer .col-sm-8 {
+            justify-content: center !important;
+            margin-left: 160px;
+        }
+
+    /* 调整表单组间距 */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+
+    /* 精确对齐输入容器 */
+    .form-group > [class*="col-"] {
+        width: calc(100% - 160px); /* 标签宽度补偿 */
+        justify-content: flex-end;
+        padding-right: 2rem;
+    }
+
+    /* 统一输入框样式 */
+    .form-control {
+        width: 340px !important;
+        margin: 0;
+        transform: translateX(12px); /* 微调对齐 */
+    }
+
+    /* 调整备注框 */
+    textarea.form-control {
+        height: 90px;
+        margin-top: 0.5rem;
+    }
+
+    /* 容器尺寸调整 */
+    #page {
+        width: 90%;
+        max-width: 780px; /* 从820px缩小 */
+        margin: 2rem auto;
+    }
+
+    #add-form {
+        width: 92%; /* 从100%缩小 */
+        padding: 2rem;
+        margin: 1.5rem auto; /* 保持垂直间距 */
+    }
+
+    /* 响应式调整 */
+    @media (min-width: 1200px) {
+        #page {
+            width: 85%;
+            max-width: 800px;
+        }
+    }
+    /* 标题样式 */
+    #add-form::before {
+        content: "Tinc客户端配置";
+        display: block;
+        font-size: 24px;
+        color: #2c6ed5;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(44,110,213,0.15);
+        margin-bottom: 1.5rem;
+    }
+
+    /* 输入控件 */
+    .form-control {
+        border: 2px solid #d0deff;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.95);
+        color: #1a3658;
+        transition: all 0.25s ease;
+    }
+
+    /* 标签样式 */
+    .control-label {
+        color: #2c6ed5;
+        font-weight: 600;
+        background: linear-gradient(90deg, #1a3658 0%, #2c6ed5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        width: 160px;
+        text-align: right;
+        padding-right: 2rem;
+    }
+
+    /* 标题居中调整 */
+    #add-form::before {
+        text-align: center;
+        margin: 0 auto 1.5rem;
+        width: 100%;
+    }
+
+    /* 输入框对齐调整 */
+    .form-group > [class*="col-"] {
+        justify-content: flex-end; /* 右对齐 */
+        width: 100%;
+    }
+
+    .form-control {
+        margin-left: auto;
+        margin-right: 2rem;
+        width: 340px; /* 固定宽度 */
+    }
+        /* 调整表单组对齐方式 */
+        .form-group {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* 改为左对齐 */
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+    
+        /* 标签容器调整 */
+        .col-xs-12.col-sm-2 {
+            flex: 0 0 160px;
+            padding-right: 2rem;
+            justify-content: flex-end; /* 标签右对齐 */
+        }
+    
+        /* 输入框容器调整 */
+        .col-xs-12.col-sm-8 {
+            flex: 0 0 340px;
+            justify-content: flex-start; /* 输入框左对齐 */
+            padding-left: 0;
+        }
+    
+        /* 统一输入框样式 */
+        .form-control {
+            width: 100% !important;
+            margin: 0;
+            transform: none;
+        }
+    
+        /* 修正按钮组定位 */
+        .layer-footer .col-sm-8 {
+            justify-content: center !important;
+            margin-left: 160px;
+        }
+
+    /* 调整表单组间距 */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+
+    /* 精确对齐输入容器 */
+    .form-group > [class*="col-"] {
+        width: calc(100% - 160px); /* 标签宽度补偿 */
+        justify-content: flex-end;
+        padding-right: 2rem;
+    }
+
+    /* 统一输入框样式 */
+    .form-control {
+        width: 340px !important;
+        margin: 0;
+        transform: translateX(12px); /* 微调对齐 */
+    }
+
+    /* 调整备注框 */
+    textarea.form-control {
+        height: 45px;
+        margin-top: 0.5rem;
+    }
+</style>
+<style>
+    /* 统一圆角样式 */
+    .form-control {
+        border-radius: 8px !important;
+    }
+
+    select.form-control {
+        border-radius: 8px !important;
+        background-position-x: 96%;
+    }
+
+    textarea.form-control {
+        border-radius: 12px !important;  /* 文本域稍大的圆角 */
+    }
 </style>
 <div id="page">
 <form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
     <div class="form-group">
-        <label for="c-server_name" class="col-xs-12 col-sm-2 control-label">{:__('选择接入服务器')}:</label>
+        <label for="c-server_name" class="col-xs-12 col-sm-2 control-label">{:__('接入服务器')}:</label>
         <div class="col-xs-12 col-sm-8">
-            <select name="row[server_name]" id="c-server_name" class="form-control" value=" " data-rule="required;servername_rule" style=" border-radius: 5px;position: relative;top:auto;left:53%;">
-                <option value="init">选择接入服务器</option>
+            <select name="row[server_name]" id="c-server_name" class="form-control" value=" " data-rule="required;servername_rule">
+                <option value="init"></option>
                 {foreach name="servers" item="vo"}
                 <option value="{$vo.server_name}">{$vo.server_name}</option>
                 {/foreach}
@@ -66,18 +590,18 @@ option{
 
 
     <div class="form-group">
-        <label for="c-net_name" class="col-xs-12 col-sm-2 control-label">{:__('加入内网名称')}:</label>
+        <label for="c-net_name" class="col-xs-12 col-sm-2 control-label">{:__('Tinc服务端')}:</label>
         <div class="col-xs-12 col-sm-8">
-            <select name="row[net_name]" id="c-net_name" class="form-control" value=" " data-rule="required;netname_rule" style="border-radius: 5px;position: relative;top:auto;left:57%;">
-                <option value="init">选择内网</option>
+            <select name="row[net_name]" id="c-net_name" class="form-control" value=" " data-rule="required;netname_rule">
+                <option value="init"></option>
             </select>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="c-password" class="col-xs-12 col-sm-2 control-label">密码:</label>
+        <label class="col-xs-12 col-sm-2 control-label">密码:</label>
         <div class="col-xs-12 col-sm-8">
-            <input id="c-password" type="password" name="row[password]" class="form-control" data-rule="required;password" style="border-radius: 5px;position: relative;top:auto;left:72%;">
+            <input type="password" class="form-control">  <!-- 已具备新交互效果 -->
         </div>
     </div>
 
@@ -85,45 +609,42 @@ option{
         <label for="c-node_name" class="col-xs-12 col-sm-2 control-label">节点名称:</label>
         <div class="col-xs-12 col-sm-8">
             <input id="c-node_name" type="text" name="row[node_name]" class="form-control"
-                data-rule="required;IsnodeRepeat;username" style=" border-radius: 5px;position: relative;top:auto;left:64%;">
+                data-rule="required;IsnodeRepeat;username">
         </div>
     </div>
 
     <div class="form-group">
         <label for="c-node_ip" class="col-xs-12 col-sm-2 control-label">内网ip:</label>
         <div class="col-xs-12 col-sm-8">
-            <input id="c-node_ip" type="text" name="row[node_ip]" class="form-control" data-rule="required;IsipRepeat;checkIPv4" style="border-radius: 5px;position: relative;top:auto;left:69%;">
+            <input id="c-node_ip" type="text" name="row[node_ip]" class="form-control" data-rule="required;IsipRepeat;checkIPv4">
         </div>
     </div>
 
     <div class="form-group">
         <label for="c-desc"class="col-xs-12 col-sm-2 control-label">备注:</label>
         <div class="col-xs-12 col-sm-8">
-             <textarea id="c-desc" data-rule=""  name="row[desc]" class="form-control" style="border-radius: 5px;position: absolute;top:69%;left:71%;"></textarea>
+             <textarea id="c-desc" data-rule=""  name="row[desc]" class="form-control"></textarea>
         </div>
     </div> 
     
-    <button type="button" class="btn btn-info" style="position:absolute;top:42%;left:43%;background-color:#00000063; font-size: medium;">温馨提示</button>
-    <div  id="info">
+    <!-- <button type="button" class="btn btn-info">温馨提示</button>
+   <div  id="info">
         <p>1:表单提交后需要您通过sid和密码前往客户端通过认证，配置，配置成功后节点状态将从”配置中“变为”已上线“。</p>
         <p>2:无论客户端的配置成功与否，系统都会提示您，您也可以在”事件查询“中查看，所以不用担心。</p>
         <p>3:与创建内网不同，客户端的配置与管控服务器是异步的，节点配置过程中服务器并不会被阻塞，您任可以进行其他操作。</p>     
-    </div>
+    </div>-->
 
 
 
     <div class="form-group layer-footer">
         <label class="control-label col-xs-12 col-sm-2"></label>
         <div class="col-xs-12 col-sm-8">
-            <button type="submit" class="btn btn-success btn-embossed disabled btn-success-add" style="position: relative;top:-8px;left:30%;
-            font-size:medium;
-            font-style: normal;
-            
-            background-color: #0000007a;">{:__('OK')}</button>
-            <button type="reset" class="btn btn-default btn-embossed" style="        position: relative;top:-9px;left:37%;
-            font-size:medium;
-            font-style: normal;
-            background-color: #0000007a;">{:__('Reset')}</button>
+            <button type="submit" class="btn btn-success btn-embossed disabled btn-success-add">
+                {:__('OK')}
+            </button>
+            <button type="reset" class="btn btn-default btn-embossed">
+                {:__('Reset')}
+            </button>
         </div>
     </div>
 </form>

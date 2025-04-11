@@ -180,7 +180,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
             bindevent: function()
             {  
                 //提示信息的显示与隐藏      
-                let i = 0;//默认隐藏
+              /*  let i = 0;//默认隐藏
                 $(".btn-info").on('click',function(){
                     if(i==0)
                     {
@@ -193,7 +193,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
                         i=0
                     }
                     
-                });
+                });*/
 
                 $.validator.config({
                     rules:{
