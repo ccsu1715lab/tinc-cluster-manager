@@ -14,8 +14,6 @@ class Requestprocess extends Backend{
     protected $user_flag = null;
     private $table_event = "fa_event";
     private $table_nodeonline = "fa_nodeonline";
-    private $view_allserver="fa_allserver";
-    private $view_allnetinserver="fa_netinserver";
     public function __construct()
     {
         //继承父类

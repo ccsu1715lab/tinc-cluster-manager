@@ -2,20 +2,20 @@
 
 $menu = [
         [
-            'name'   => 'tincui/statistic',
-            'title'  => '统计控制台',
+            'name'   => 'tincui/Nwdata',
+            'title'  => '网络状态可视化',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],
         [
             'name'   => 'tincui/netmanagement',
-            'title'  => '内网管理',
+            'title'  => 'Tinc服务端',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],
         [
             'name'   => 'tincui/nodemanagement',
-            'title'  => '节点管理',
+            'title'  => 'Tinc客户端',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],  

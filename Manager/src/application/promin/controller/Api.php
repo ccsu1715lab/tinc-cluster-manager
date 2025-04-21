@@ -362,7 +362,7 @@ public function updatenodeonlinestatus()
 }
 }
 
-    public function checkonline(){
+   /* public function checkonline(){
         $list = $this->nodemodel->select();
             foreach ($list as $item) {
                 $current_time = date("Y-m-d H:i:s");
@@ -385,7 +385,7 @@ public function updatenodeonlinestatus()
                 }
     
             }
-    }
+    }*/
 
     //接入服务器连接状态判断接口
     public function measure_serverconn()
