@@ -2,8 +2,14 @@
 
 $menu = [
         [
+            'name'   => 'tincui/Singlenwdata',
+            'title'  => '网络状态统计控制台',
+            'icon'   => 'fa fa-gears',
+            'ismenu' => 1,
+        ],
+        [
             'name'   => 'tincui/Nwdata',
-            'title'  => '网络状态可视化',
+            'title'  => '所有网络状态统计控制台',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],

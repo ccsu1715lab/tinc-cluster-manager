@@ -15,6 +15,7 @@ class Tincui extends Addons
 }
    //卸载插件 
     public function uninstall(){
+    Menu::delete('tincui/Singlenwdata');
     Menu::delete('tincui/Nwdata');
     Menu::delete('tincui/netmanagement');
     Menu::delete('tincui/nodemanagement');
@@ -22,6 +23,7 @@ class Tincui extends Addons
 }
      //禁用插件
     public function disable(){
+        Menu::disable('tincui/Singlenwdata');
         Menu::disable('tincui/Nwdata');
         Menu::disable('tincui/netmanagement');
         Menu::disable('tincui/nodemanagement');
@@ -29,6 +31,7 @@ class Tincui extends Addons
 }
     //启动插件
     public function enable(){
+        Menu::enable('tincui/Singlenwdata');
         Menu::enable('tincui/Nwdata');
         Menu::enable('tincui/netmanagement');
         Menu::enable('tincui/nodemanagement');

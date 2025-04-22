@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>单网数据可视化</title>
+    <link rel="stylesheet" href="__CDN__/assets/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="__CDN__/assets/css/fastadmin.min.css"/>
+    <link rel="stylesheet" href="__CDN__/assets/libs/font-awesome/css/font-awesome.min.css"/>
+    <style>
+        .network-selector {
+            margin: 50px auto;
+            max-width: 800px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .selector-container {
+            margin-bottom: 20px;
+        }
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .chart-box {
+            background: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            height: 400px;
+        }
+        .chart-title {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .chart {
+            height: calc(100% - 40px);
+            width: 100%;
+        }
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-size: 18px;
+        }
+        .dashboard-card {
+            min-height: 130px;
+        }
+        .dashboard-card h3 {
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .dashboard-value {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+        .traffic-info {
+            margin-top: 10px;
+        }
+        .traffic-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .traffic-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .upload {
+            color: #f56c6c;
+        }
+        .download {
+            color: #67c23a;
+        }
+        #network-status-badge {
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .return-btn {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel panel-default panel-intro">
+        <div class="panel-heading">
+            <div class="panel-lead"><em>单网监控面板</em>实时监控单个网络的状态与性能</div>
+        </div>
+        
+        <div class="panel-body">
+            <!-- 选择页面 -->
+            <div id="selection-screen" class="network-selector">
+                <h3 class="mb-4">请选择要查看的内网</h3>
+                <div class="row selector-container">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="server-select">服务器</label>
+                            <select id="server-select" class="form-control">
+                                <option value="">请选择服务器</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="network-select">内网</label>
+                            <select id="network-select" class="form-control" disabled>
+                                <option value="">请先选择服务器</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button id="confirm-btn" class="btn btn-success btn-lg" disabled>确认</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 仪表板页面 -->
+            <div id="dashboard-screen" style="display: none;">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <button id="return-btn" class="btn btn-sm btn-default pull-right"><i class="fa fa-arrow-left"></i> 返回选择</button>
+                            <strong>当前监控:</strong> <span id="current-server"></span> - <span id="current-network"></span>
+                            <span class="badge" id="network-status-badge"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 状态卡片 -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="panel panel-default dashboard-card">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">平均响应时间</h3>
+                            </div>
+                            <div class="panel-body">
+                                <span id="avg-response-time" class="dashboard-value">--</span>
+                                <small>毫秒</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="panel panel-default dashboard-card">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">健康评分</h3>
+                            </div>
+                            <div class="panel-body">
+                                <span id="health-score" class="dashboard-value">--</span>
+                                <small>/100</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="panel panel-default dashboard-card">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">流量</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="traffic-info">
+                                    <div>
+                                        <span class="traffic-label upload">上传:</span>
+                                        <span id="upload-speed" class="traffic-value">--</span>
+                                    </div>
+                                    <div>
+                                        <span class="traffic-label download">下载:</span>
+                                        <span id="download-speed" class="traffic-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="panel panel-default dashboard-card">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">平均恢复时间</h3>
+                            </div>
+                            <div class="panel-body">
+                                <span id="avg-recovery-time" class="dashboard-value">--</span>
+                                <small>分钟</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 图表区域 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">健康评分趋势 (近7天)</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div id="health-score-chart" style="height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">网络中断趋势 (近7天)</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div id="disruption-trend-chart" style="height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row return-btn">
+                    <div class="col-md-12">
+                        <button id="refresh-btn" class="btn btn-primary"><i class="fa fa-refresh"></i> 刷新数据</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 加载动画 -->
+            <div id="loading-indicator" style="display: none; text-align: center; padding: 50px;">
+                <i class="fa fa-spinner fa-spin fa-3x"></i>
+                <p>加载数据中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="__CDN__/assets/libs/jquery/dist/jquery.min.js"></script>
+    <script src="__CDN__/assets/libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script>
+        $(function () {
+            // 初始化图表
+            var healthScoreChart = null;
+            var disruptionTrendChart = null;
+            
+            // 初始化事件
+            function initEvents() {
+                // 服务器选择事件
+                $('#server-select').change(function() {
+                    var serverId = $(this).val();
+                    
+                    // 重置网络选择和按钮状态
+                    $('#network-select').empty().append('<option value="">请先选择服务器</option>').prop('disabled', true);
+                    $('#confirm-btn').prop('disabled', true);
+                    
+                    if (serverId) {
+                        // 加载该服务器下的网络列表
+                        loadNetworks(serverId);
+                    }
+                });
+                
+                // 网络选择事件
+                $('#network-select').change(function() {
+                    var networkId = $(this).val();
+                    $('#confirm-btn').prop('disabled', !networkId);
+                });
+                
+                // 确认按钮事件
+                $('#confirm-btn').click(function() {
+                    var serverId = $('#server-select').val();
+                    var networkId = $('#network-select').val();
+                    
+                    if (serverId && networkId) {
+                        // 隐藏选择页面，显示加载动画
+                        $('#selection-screen').hide();
+                        $('#loading-indicator').show();
+                        
+                        // 加载网络数据
+                        setTimeout(function() {
+                            loadNetworkData(serverId, networkId);
+                            $('#loading-indicator').hide();
+                            $('#dashboard-screen').show();
+                        }, 800); // 模拟加载时间
+                    }
+                });
+                
+                // 返回按钮事件
+                $('#return-btn').click(function() {
+                    // 显示选择页面，隐藏仪表板
+                    $('#dashboard-screen').hide();
+                    $('#selection-screen').show();
+                });
+                
+                // 刷新按钮事件
+                $('#refresh-btn').click(function() {
+                    var serverId = $('#server-select').val();
+                    var networkId = $('#network-select').val();
+                    
+                    // 显示加载动画
+                    $('#loading-indicator').show();
+                    $('#dashboard-screen').hide();
+                    
+                    // 重新加载数据
+                    setTimeout(function() {
+                        loadNetworkData(serverId, networkId);
+                        $('#loading-indicator').hide();
+                        $('#dashboard-screen').show();
+                    }, 800); // 模拟加载时间
+                });
+            }
+            
+            // 加载服务器列表
+            function loadServers() {
+                // 模拟数据
+                var servers = [
+                    { id: 1, name: '上海服务器A' },
+                    { id: 2, name: '北京服务器B' },
+                    { id: 3, name: '广州服务器C' },
+                    { id: 4, name: '成都服务器D' }
+                ];
+                
+                var $select = $('#server-select');
+                $select.empty();
+                $select.append('<option value="">请选择服务器</option>');
+                
+                $.each(servers, function(i, server) {
+                    $select.append('<option value="' + server.id + '">' + server.name + '</option>');
+                });
+            }
+            
+            // 加载网络列表
+            function loadNetworks(serverId) {
+                // 模拟数据
+                var networksByServer = {
+                    1: [
+                        { id: 101, name: '研发部内网' },
+                        { id: 102, name: '行政部内网' },
+                        { id: 103, name: '财务部内网' }
+                    ],
+                    2: [
+                        { id: 201, name: '销售部内网' },
+                        { id: 202, name: '市场部内网' }
+                    ],
+                    3: [
+                        { id: 301, name: '生产部内网' },
+                        { id: 302, name: '质控部内网' }
+                    ],
+                    4: [
+                        { id: 401, name: '客服部内网' },
+                        { id: 402, name: '技术支持内网' }
+                    ]
+                };
+                
+                var networks = networksByServer[serverId] || [];
+                
+                var $select = $('#network-select');
+                $select.empty();
+                
+                if (networks.length > 0) {
+                    $select.append('<option value="">请选择内网</option>');
+                    
+                    $.each(networks, function(i, network) {
+                        $select.append('<option value="' + network.id + '">' + network.name + '</option>');
+                    });
+                    
+                    $select.prop('disabled', false);
+                } else {
+                    $select.append('<option value="">该服务器下无内网</option>');
+                }
+            }
+            
+            // 加载网络数据
+            function loadNetworkData(serverId, networkId) {
+                // 获取服务器名和网络名
+                var serverName = $('#server-select option:selected').text();
+                var networkName = $('#network-select option:selected').text();
+                
+                // 更新页面显示
+                $('#current-server').text(serverName);
+                $('#current-network').text(networkName);
+                
+                // 模拟数据
+                var mockData = generateMockData(serverId, networkId);
+                
+                // 更新卡片数据
+                $('#avg-response-time').text(mockData.avg_response_time);
+                $('#health-score').text(mockData.health_score);
+                $('#upload-speed').text(mockData.traffic.upload);
+                $('#download-speed').text(mockData.traffic.download);
+                $('#avg-recovery-time').text(mockData.avg_recovery_time);
+                
+                // 设置网络状态标签
+                var statusBadge = $('#network-status-badge');
+                if (mockData.status === '正常运行中') {
+                    statusBadge.text('正常').removeClass('badge-danger badge-warning').addClass('badge-success');
+                } else if (mockData.status === '离线') {
+                    statusBadge.text('离线').removeClass('badge-success badge-warning').addClass('badge-danger');
+                } else {
+                    statusBadge.text(mockData.status).removeClass('badge-success badge-danger').addClass('badge-warning');
+                }
+                
+                // 初始化并更新图表
+                initCharts();
+                updateCharts(mockData);
+            }
+            
+            // 初始化图表
+            function initCharts() {
+                if (!healthScoreChart) {
+                    healthScoreChart = echarts.init(document.getElementById('health-score-chart'));
+                }
+                
+                if (!disruptionTrendChart) {
+                    disruptionTrendChart = echarts.init(document.getElementById('disruption-trend-chart'));
+                }
+            }
+            
+            // 更新图表数据
+            function updateCharts(data) {
+                // 健康评分趋势图（柱状图）
+                var healthScoreOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: '{b}: {c}'
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.health_score_trend.dates
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 100,
+                        axisLabel: {
+                            formatter: '{value}'
+                        }
+                    },
+                    series: [{
+                        name: '健康评分',
+                        type: 'bar',
+                        data: data.health_score_trend.scores,
+                        itemStyle: {
+                            color: function(params) {
+                                // 根据分数设置颜色
+                                var score = params.value;
+                                if (score >= 85) return '#67C23A'; // 绿色（好）
+                                else if (score >= 60) return '#E6A23C'; // 橙色（一般）
+                                else return '#F56C6C'; // 红色（差）
+                            }
+                        },
+                        barWidth: '50%'
+                    }]
+                };
+                
+                // 网络中断趋势图（折线图）
+                var disruptionTrendOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: '{b}: {c} 次'
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.disruption_trend.dates
+                    },
+                    yAxis: {
+                        type: 'value',
+                        minInterval: 1,
+                        axisLabel: {
+                            formatter: '{value} 次'
+                        }
+                    },
+                    series: [{
+                        name: '中断次数',
+                        type: 'line',
+                        data: data.disruption_trend.counts,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        itemStyle: {
+                            color: '#F56C6C'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: '#F56C6C'
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(245, 108, 108, 0.3)' },
+                                { offset: 1, color: 'rgba(245, 108, 108, 0.1)' }
+                            ])
+                        }
+                    }]
+                };
+                
+                // 应用图表配置
+                healthScoreChart.setOption(healthScoreOption);
+                disruptionTrendChart.setOption(disruptionTrendOption);
+            }
+            
+            // 生成模拟数据
+            function generateMockData(serverId, networkId) {
+                // 使用服务器ID和网络ID作为种子，保证同一网络每次生成的数据相似
+                var seed = parseInt(serverId.toString() + networkId.toString());
+                var rand = function(min, max) {
+                    var rnd = Math.sin(seed++) * 10000;
+                    rnd = rnd - Math.floor(rnd);
+                    return Math.floor(rnd * (max - min + 1) + min);
+                };
+                
+                // 生成过去7天的日期
+                var dates = [];
+                for (var i = 6; i >= 0; i--) {
+                    var date = new Date();
+                    date.setDate(date.getDate() - i);
+                    dates.push((date.getMonth() + 1) + '/' + date.getDate());
+                }
+                
+                // 健康评分数据
+                var healthScores = [];
+                for (var i = 0; i < 7; i++) {
+                    healthScores.push(rand(50, 100));
+                }
+                
+                // 中断次数数据
+                var disruptionCounts = [];
+                for (var i = 0; i < 7; i++) {
+                    disruptionCounts.push(rand(0, 5));
+                }
+                
+                // 网络状态（大部分情况为正常）
+                var statusOptions = ['正常运行中', '离线', '不稳定'];
+                var statusWeights = [0.8, 0.1, 0.1]; // 权重，大部分为正常
+                var statusRand = Math.random();
+                var status = statusOptions[0];
+                
+                if (statusRand > statusWeights[0]) {
+                    if (statusRand > statusWeights[0] + statusWeights[1]) {
+                        status = statusOptions[2];
+                    } else {
+                        status = statusOptions[1];
+                    }
+                }
+                
+                return {
+                    status: status,
+                    avg_response_time: rand(5, 100), // 毫秒
+                    health_score: rand(60, 95), // 0-100
+                    avg_recovery_time: rand(3, 30), // 分钟
+                    traffic: {
+                        upload: rand(50, 200) + ' Mbps',
+                        download: rand(100, 500) + ' Mbps'
+                    },
+                    health_score_trend: {
+                        dates: dates,
+                        scores: healthScores
+                    },
+                    disruption_trend: {
+                        dates: dates,
+                        counts: disruptionCounts
+                    }
+                };
+            }
+            
+            // 窗口大小改变时重新调整图表大小
+            $(window).resize(function() {
+                if (healthScoreChart) healthScoreChart.resize();
+                if (disruptionTrendChart) disruptionTrendChart.resize();
+            });
+            
+            // 初始化页面
+            function init() {
+                loadServers();
+                initEvents();
+            }
+            
+            // 执行初始化
+            init();
+        });
+    </script>
+</body>
+</html>

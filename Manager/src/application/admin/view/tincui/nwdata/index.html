@@ -13,11 +13,11 @@
     
     .stat-card {
         flex: 1;
-        min-width: 200px;
+        min-width: 220px;
         background-color: white;
         border-radius: 15px;
-        padding: 15px;
-        margin: 0 10px;
+        padding: 20px;
+        margin: 0 10px 20px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         position: relative;
         overflow: hidden;
@@ -25,8 +25,9 @@
     
     .stat-card .title {
         color: #707070;
-        font-size: 14px;
+        font-size: 16px;
         margin-bottom: 15px;
+        font-weight: 500;
     }
     
     .stat-card .value {
@@ -35,9 +36,16 @@
         margin-bottom: 5px;
     }
     
+    .stat-card .subvalue {
+        font-size: 16px;
+        color: #707070;
+        margin-bottom: 10px;
+    }
+    
     .stat-card .trend {
         font-size: 14px;
         color: #707070;
+        margin-top: 10px;
     }
     
     .trend.positive {
@@ -98,14 +106,6 @@
         position: relative;
     }
     
-    .progress-circle {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 50px;
-        height: 50px;
-    }
-    
     .badge {
         display: inline-block;
         padding: 3px 8px;
@@ -133,6 +133,52 @@
         background-color: rgba(33, 150, 243, 0.1);
         color: #2196f3;
     }
+    
+    .donut-container {
+        display: flex;
+        justify-content: center;
+        height: 180px;
+        margin: 15px 0;
+    }
+    
+    .network-counts {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 15px;
+    }
+    
+    .count-item {
+        text-align: center;
+    }
+    
+    .count-value {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .count-label {
+        font-size: 14px;
+        color: #707070;
+    }
+    
+    .health-rating {
+        text-align: center;
+        margin-top: 20px;
+    }
+    
+    .rating-value {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    
+    .rating-text {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 15px;
+        margin-top: 10px;
+        font-weight: 500;
+    }
 </style>
 
 <div class="network-stats-container">
@@ -142,75 +188,58 @@
         </div>
         <div class="panel-body">
             <div class="card-container">
-                <!-- 总网络数量 -->
+                <!-- 网络在线状态卡片 -->
                 <div class="stat-card">
-                    <div class="progress-circle">
-                        <div id="total-circle" style="width:50px; height:50px;"></div>
+                    <div class="title">网络在线状态</div>
+                    <div class="donut-container">
+                        <div id="online-rate-chart" style="width:180px; height:180px;"></div>
                     </div>
-                    <div class="title">总网络数量</div>
-                    <div class="value">200</div>
-                    <div class="trend">较上周 <span class="positive">+2%</span></div>
+                    <div class="rate-legend" style="text-align:center; margin:5px 0 15px;">
+                        <span style="display:inline-block; width:12px; height:12px; background-color:#2196f3; margin-right:5px; border-radius:2px;"></span>
+                        <span style="color:#2196f3; font-weight:500;">在线率:</span>
+                        <span id="online-rate-text" style="color:#2196f3; font-weight:bold; font-size:16px;">91.5%</span>
+                    </div>
+                    <div class="network-counts">
+                        <div class="count-item">
+                            <div class="count-value" id="total-networks">200</div>
+                            <div class="count-label">总网络数</div>
+                        </div>
+                        <div class="count-item">
+                            <div class="count-value" id="online-networks">183</div>
+                            <div class="count-label">在线网络</div>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- 当前在线网络数量 -->
+                <!-- 平均响应时间 -->
                 <div class="stat-card">
-                    <div class="progress-circle">
-                        <div id="online-circle" style="width:50px; height:50px;"></div>
-                    </div>
-                    <div class="title">当前在线网络</div>
-                    <div class="value">183</div>
-                    <div class="trend">较上周 <span class="positive">+3%</span></div>
+                    <div class="title">平均响应时间</div>
+                    <div class="value" id="avg-response-time">42.8<span style="font-size:18px;">ms</span></div>
+                    <div class="subvalue">最近7天平均</div>
+                    <div id="response-time-chart" style="width:100%; height:120px;"></div>
                 </div>
                 
-                <!-- 网络在线率 -->
+                <!-- 健康分数 -->
                 <div class="stat-card">
-                    <div class="progress-circle">
-                        <div id="rate-circle" style="width:50px; height:50px;"></div>
+                    <div class="title">网络健康平均分</div>
+                    <div class="value" id="health-score">92.8</div>
+                    <div class="subvalue">最近7天平均</div>
+                    <div class="health-rating">
+                        <div class="rating-text badge-success">健康状态良好</div>
                     </div>
-                    <div class="title">网络在线率</div>
-                    <div class="value">91.5%</div>
-                    <div class="trend">较上周 <span class="positive">+1.2%</span></div>
+                    <div id="health-score-gauge" style="width:100%; height:100px;"></div>
                 </div>
                 
                 <!-- 平均故障恢复时间 -->
                 <div class="stat-card">
-                    <div class="progress-circle">
-                        <div id="recovery-circle" style="width:50px; height:50px;"></div>
-                    </div>
                     <div class="title">平均故障恢复时间</div>
-                    <div class="value">8.3<span style="font-size:18px;">分钟</span></div>
-                    <div class="trend">较上周 <span class="negative">+1.5分钟</span></div>
+                    <div class="value" id="avg-recovery-time">8.3<span style="font-size:18px;">分钟</span></div>
+                    <div class="subvalue">最近7天平均</div>
+                    <div id="recovery-time-chart" style="width:100%; height:120px;"></div>
                 </div>
             </div>
             
             <div class="chart-section">
-                <!-- 健康分数统计图 -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div class="chart-title">网络健康分数趋势（过去7天）</div>
-                        <div>
-                            <span class="badge badge-success">优秀</span>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <div id="health-chart" style="width:100%; height:250px;"></div>
-                    </div>
-                    <div class="chart-info">
-                        <div class="info-item">
-                            <div class="info-label">最大健康分数</div>
-                            <div class="info-value">96</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">最小健康分数</div>
-                            <div class="info-value">89</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">平均健康分数</div>
-                            <div class="info-value">92.9</div>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- 中断次数统计图 -->
                 <div class="chart-card">
                     <div class="chart-header">
@@ -225,15 +254,15 @@
                     <div class="chart-info">
                         <div class="info-item">
                             <div class="info-label">最大中断次数</div>
-                            <div class="info-value">5</div>
+                            <div class="info-value" id="disruption-max">5</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">最小中断次数</div>
-                            <div class="info-value">0</div>
+                            <div class="info-value" id="disruption-min">0</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">中断频率（天均）</div>
-                            <div class="info-value">2.0</div>
+                            <div class="info-value" id="disruption-freq">2.0</div>
                         </div>
                     </div>
                 </div>

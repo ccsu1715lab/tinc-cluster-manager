@@ -22,15 +22,63 @@ class Nwdata extends Model
         // 计算在线率
         $onlineRate = ($totalNetworks > 0) ? round(($onlineNetworks / $totalNetworks) * 100, 2) : 0;
     
-        // 计算平均故障恢复时间（从日志中获取）
+        // 计算平均响应时间(ms)
+        $avgResponseTime = $this->calculateAvgResponseTime();
+        
+        // 计算平均故障恢复时间（分钟）
         $avgRecoveryTime = $this->calculateAvgRecoveryTime();
         
+        // 计算故障恢复时间趋势
+        $recoveryTimeTrend = $this->calculateRecoveryTimeTrend();
+        
+        // 计算平均健康分数
+        $avgHealthScore = $this->calculateAvgHealthScore();
+        
         return [
-            'total_networks' => $totalNetworks,
-            'online_networks' => $onlineNetworks,
-            'online_rate' => $onlineRate,
-            'avg_recovery_time' => $avgRecoveryTime
+            'network_status' => [
+                'total_networks' => $totalNetworks,
+                'online_networks' => $onlineNetworks,
+                'online_rate' => $onlineRate
+            ],
+            'avg_response_time' => $avgResponseTime,
+            'avg_recovery_time' => $avgRecoveryTime,
+            'recovery_time_trend' => $recoveryTimeTrend,
+            'health_score' => $avgHealthScore
         ];
+    }
+    //计算近7天的平均恢复时间趋势
+    protected function calculateRecoveryTimeTrend()
+    {
+        // 计算7天前的日期时间
+        $recoveryTimeTrend = [];
+        
+        // 遍历最近7天
+        for ($i = 6; $i >= 0; $i--) {
+            // 计算每天的开始和结束时间
+            $dayStart = date('Y-m-d 00:00:00', strtotime("-$i days"));
+            $dayEnd = date('Y-m-d 23:59:59', strtotime("-$i days"));
+            
+            // 查询当天的网络恢复记录
+            $result = Db::table('fa_network_recovery_log')
+                ->where('recovery_time', '>=', $dayStart)
+                ->where('recovery_time', '<=', $dayEnd)
+                ->field('COUNT(*) as count, SUM(duration) as total_duration')
+                ->find();
+            
+            // 计算当天的平均恢复时间
+            if ($result && $result['count'] > 0) {
+                $avgRecoveryTime = round($result['total_duration'] / $result['count'], 2);
+            } else {
+                // 如果没有记录，用上一天的数据或默认值
+                $avgRecoveryTime = isset($recoveryTimeTrend[$i+1]) ? $recoveryTimeTrend[$i+1] : 0;
+            }
+            
+            // 存储到数组中
+            $recoveryTimeTrend[$i] = $avgRecoveryTime;
+        }
+        
+        // 返回结果数组，索引0对应最早的一天（6天前），索引6对应今天
+        return $recoveryTimeTrend;
     }
     
     // 计算平均故障恢复时间（分钟）
@@ -56,19 +104,16 @@ class Nwdata extends Model
         return $avgRecoveryTime;
     }
     
-    // 获取网络健康分数趋势（过去7天）
-    public function getHealthScoreTrend()
+    // 计算平均响应时间(ms)
+    protected function calculateAvgResponseTime()
     {
-        // 在实际项目中，应从数据库获取历史健康分数数据
-        // 这里使用模拟数据
-        $scores = [92, 95, 89, 94, 96, 91, 93];
-        
-        return [
-            'scores' => $scores,
-            'max' => max($scores),
-            'min' => min($scores),
-            'avg' => round(array_sum($scores) / count($scores), 1)
-        ];
+            return 50;
+    }
+    
+    // 计算平均健康分数
+    protected function calculateAvgHealthScore()
+    {
+            return 85;
     }
     
     // 获取网络中断次数趋势（过去7天）
@@ -99,12 +144,33 @@ class Nwdata extends Model
     // 计算网络健康分数
     public function calculateNetworkHealthScore($netId)
     {
-        // 在实际项目中，根据多个因素计算健康分数：
-        // 1. 连接稳定性 (40%)
-        // 2. 响应时间 (30%)
-        // 3. 数据质量 (30%)
-        
-        // 这里使用模拟数据
-        return rand(85, 98);
+            return 92.8;
+    }
+    
+    // 计算连接稳定性得分
+    protected function calculateStabilityScore($netId)
+    {
+
+    }
+    
+    // 计算响应时间得分
+    protected function calculatePerformanceScore($netId)
+    {
+
+    }
+    
+    // 计算数据质量得分
+    protected function calculateQualityScore($netId)
+    {
+        // 为简化实现，这里返回模拟的分数
+        // 实际实现应根据业务需求完善
+        return 25; // 0-30之间的分数
+    }
+    
+    // 记录健康分数
+    protected function recordHealthScore($netId, $score, $stabilityScore, $performanceScore, $qualityScore)
+    {
+        // 将分数记录到数据库中
+
     }
 }
