@@ -36,7 +36,7 @@ define(['jquery'], function ($) {
                 }
                 
                 if (url.indexOf('singlenwdata/getNetworks') > -1) {
-                    var serverId = options.data && options.data.server_id;
+                    var serverId = options.data && options.data.server_name;
                     MockHandler.mockResponse(options, MockHandler.getNetworksData(serverId));
                     return;
                 }
@@ -85,31 +85,31 @@ define(['jquery'], function ($) {
          * @param {number} serverId 服务器ID
          * @returns {Object} 模拟的网络列表响应
          */
-        getNetworksData: function(serverId) {
+        getNetworksData: function(server_name) {
             var networksByServer = {
                 '上海服务器A': [
-                    { id: 101, name_net: '研发部内网' },
-                    { id: 102, name_net: '行政部内网' },
-                    { id: 103, name_net: '财务部内网' }
+                    { id: 101, net_name: '研发部内网' },
+                    { id: 102, net_name: '行政部内网' },
+                    { id: 103, net_name: '财务部内网' }
                 ],
                 '北京服务器B': [
-                    { id: 201, name_net: '销售部内网' },
-                    { id: 202, name_net: '市场部内网' }
+                    { id: 201, net_name: '销售部内网' },
+                    { id: 202, net_name: '市场部内网' }
                 ],
                 '广州服务器C': [
-                    { id: 301, name_net: '生产部内网' },
-                    { id: 302, name_net: '质控部内网' }
+                    { id: 301, net_name: '生产部内网' },
+                    { id: 302, net_name: '质控部内网' }
                 ],
                 '成都服务器D': [
-                    { id: 401, name_net: '客服部内网' },
-                    { id: 402, name_net: '技术支持内网' }
+                    { id: 401, net_name: '客服部内网' },
+                    { id: 402, net_name: '技术支持内网' }
                 ]
             };
             
             return {
                 code: 1,
                 msg: '获取成功',
-                data: networksByServer[serverId] || []
+                data: networksByServer[server_name] || []
             };
         },
         
@@ -119,9 +119,9 @@ define(['jquery'], function ($) {
          * @param {number} networkId 网络ID
          * @returns {Object} 模拟的网络数据响应
          */
-        getNetworkData: function(networkId) {
+        getNetworkData: function(server_name,net_name) {
             // 使用networkId作为随机种子，使得相同的网络每次生成的数据相似
-            var seed = parseInt(networkId);
+            var seed = parseInt(net_name);
             var rand = function(min, max) {
                 var rnd = Math.sin(seed++) * 10000;
                 rnd = rnd - Math.floor(rnd);
@@ -195,10 +195,8 @@ define(['jquery'], function ($) {
                 code: 1,
                 msg: '获取成功',
                 data: {
-                    network_id: networkId,
-                    network_name: networkData.name,
-                    server_id: networkData.serverId,
-                    server_name: serverMap[networkData.serverId],
+                    net_name: networkData.net_name,
+                    server_name: serverMap[networkData.server_name],
                     status: status,
                     avg_response_time: rand(5, 100), // 毫秒
                     health_score: rand(60, 95), // 0-100

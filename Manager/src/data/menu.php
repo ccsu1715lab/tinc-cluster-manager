@@ -3,13 +3,13 @@
 $menu = [
         [
             'name'   => 'tincui/Singlenwdata',
-            'title'  => '网络状态统计控制台',
+            'title'  => '单网数据可视化',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],
         [
             'name'   => 'tincui/Nwdata',
-            'title'  => '所有网络状态统计控制台',
+            'title'  => '网络集群数据可视化',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],

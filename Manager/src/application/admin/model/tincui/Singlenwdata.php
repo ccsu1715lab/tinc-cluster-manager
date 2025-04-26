@@ -178,29 +178,18 @@ class Singlenwdata extends Backend
     /**
      * 获取网络中断趋势 (最近7天)
      */
-    protected function getDisruptionTrend($networkId)
+    protected function getDisruptionTrend($servername,$netname)
     {
         $dates = [];
         $counts = [];
-        
-        // 获取最近7天的日期
-        for ($i = 6; $i >= 0; $i--) {
-            $date = date('Y-m-d', strtotime("-$i days"));
-            $dates[] = date('m/d', strtotime($date));
-            
-            // 获取该日期的中断次数
-            $count = Db::name('network_disruption_log')
-                ->where('net_id', $networkId)
-                ->whereTime('offline_time', 'between', [$date . ' 00:00:00', $date . ' 23:59:59'])
-                ->count();
-                
-            $counts[] = intval($count);
+        for($i=6;$i>=0;$i--){
+            $starttime=date('Y-m-d 00:00:00',strtotime("-$i days"));
+            $endtime=date('Y-m-d 23:59:59',strtotime("-$i days +1 day -1 second"));
+            $count=Db::table('fa_network_disruption_log')->where('server_name',$servername)->where('net_name',$netname)->where('offline_time','>=',$starttime)->where('offline_time','<=',$endtime)->count();
+            $dates[]=date('m/d',strtotime("-$i days"));
+            $counts[]=$count;
         }
-        
-        return [
-            'dates' => $dates,
-            'counts' => $counts
-        ];
+        return ['dates'=>$dates,'counts'=>$counts];
     }
     
     /**

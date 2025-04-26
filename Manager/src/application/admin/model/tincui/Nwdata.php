@@ -74,7 +74,7 @@ class Nwdata extends Model
             }
             
             // 存储到数组中
-            $recoveryTimeTrend[$i] = $avgRecoveryTime;
+            $recoveryTimeTrend[6-$i] = $avgRecoveryTime;
         }
         
         // 返回结果数组，索引0对应最早的一天（6天前），索引6对应今天

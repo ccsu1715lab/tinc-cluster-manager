@@ -3,12 +3,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
     var Controller = {
         index: function () {
             // 是否使用模拟数据 (开发/测试阶段设为 true, 生产环境设为 false)
-            var USE_MOCK_DATA = true;
+          /*  var USE_MOCK_DATA = true;
             
             // 初始化模拟数据处理器
             if (USE_MOCK_DATA) {
                 MockHandler.init(true);
-            }
+            }*/
             
             // 初始化变量
             var healthScoreChart = null;
@@ -55,7 +55,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                         $('#loading-indicator').show();
                         
                         // 加载网络数据
-                        loadNetworkData(selectedNetworkId);
+                        loadNetworkData(selectedServerId,selectedNetworkId);
                     }
                 });
                 
@@ -74,7 +74,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                         $('#loading-indicator').show();
                         
                         // 重新加载网络数据
-                        loadNetworkData(selectedNetworkId);
+                        loadNetworkData(selectedServerId,selectedNetworkId);
                     }
                 });
                 
@@ -98,7 +98,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                             var $select = $('#server-select');
                             $select.empty();
                             $select.append('<option value="">请选择服务器</option>');
-                            console.log(res);
                             $.each(res.data, function(i, server) {
                                 $select.append('<option value="' + server.server_name + '">' + server.server_name + '</option>');
                             });
@@ -123,6 +122,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 1) {
+                        
                             var $select = $('#network-select');
                             $select.empty();
                             
@@ -133,7 +133,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                                 $select.append('<option value="">请选择内网</option>');
                                 
                                 $.each(res.data, function(i, network) {
-                                    $select.append('<option value="' + network.net_name + '">' + network.name + '</option>');
+                                    $select.append('<option value="' + network.net_name + '">' + network.net_name + '</option>');
                                 });
                                 
                                 // 启用选择框
@@ -152,13 +152,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
             /**
              * 加载网络数据
              */
-            function loadNetworkData(networkId) {
+            function loadNetworkData(server_name,net_name) {
                 $.ajax({
                     url: 'tincui/singlenwdata/getNetworkData',
                     type: 'GET',
-                    data: { network_id: networkId },
+                    data: { server_name: server_name, net_name: net_name },
                     dataType: 'json',
                     success: function(res) {
+                    
                         // 隐藏加载指示器
                         $('#loading-indicator').hide();
                         
