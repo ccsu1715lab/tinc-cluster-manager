@@ -70,7 +70,7 @@ def delete_thread(thread_id):
 @click.option("thread_id","-id",help="线程id")
 @click.option("--al","-a",help="展示所有线程信息",is_flag=True)  
 def display_thread(thread_id,al):
-    """展示线程信息"""
+    """展示线程"""
     if al:
         TincdvsTool.show_all_threads()
     elif thread_id:

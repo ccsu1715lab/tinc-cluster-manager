@@ -2,7 +2,7 @@
 from Thread import Thread
 class ThreadManager:
     thread_list=[]#线程列表
-    config_path='./Tincs/config'##配置文件路径
+    XML_FILE_PATH='./xml/tincs.xml'##配置文件路径
     
     ##加载配置文件
     def load_info(self):
