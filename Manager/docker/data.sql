@@ -474,12 +474,6 @@ BEGIN
     SET deleted_count = ROW_COUNT();
     SET total_deleted = total_deleted + deleted_count;
     
-    /* 清理节点丢包率记录 */
-    DELETE FROM `fa_node_packet_loss` 
-    WHERE `create_time` < clean_date;
-    SET deleted_count = ROW_COUNT();
-    SET total_deleted = total_deleted + deleted_count;
-    
     /* 清理节点流量记录 */
     DELETE FROM `fa_node_traffic` 
     WHERE `create_time` < clean_date;

@@ -17,7 +17,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                 healthScoreTrendChart: null,
                 disruptionTrendChart: null,
                 trafficChart: null,
-                recoveryTrendChart: null
+                nodeOnlineChart: null
             };
             var selectedServerId = null;
             var selectedNetworkId = null;
@@ -87,11 +87,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                 // 窗口大小改变时调整图表大小
                 $(window).resize(function() {
                     if (charts.responseTimeChart) charts.responseTimeChart.resize();
+                    if (charts.nodeOnlineChart) charts.nodeOnlineChart.resize();
                     if (charts.healthScoreChart) charts.healthScoreChart.resize();
                     if (charts.healthScoreTrendChart) charts.healthScoreTrendChart.resize();
                     if (charts.disruptionTrendChart) charts.disruptionTrendChart.resize();
                     if (charts.trafficChart) charts.trafficChart.resize();
-                    if (charts.recoveryTrendChart) charts.recoveryTrendChart.resize();
                 });
 
                 // Ping测试按钮点击事件
@@ -107,8 +107,109 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                     $btn.html('<i class="fa fa-spinner fa-spin"></i> 测试中...');
                     
                     switch(type){
+                        case 'node-online':
+                            url += 'GetNodeonlineRate';
+                            $.ajax({
+                                url: url,
+                                type: 'GET',
+                                data: {server_name:selectedServerId,net_name:selectedNetworkId},
+                                dataType: 'json',
+                                success: function(res){
+                                    var res_data = res;
+                                    if(res_data.code === 1){
+                                        // 提取数据
+                                        var onlineNodes = res_data.data.onlinenode || 0;
+                                        var totalNodes = res_data.data.cntnode || 0;
+                                        
+                                        // 计算离线节点和在线率
+                                        var offlineNodes = totalNodes - onlineNodes;
+                                        var onlineRate = totalNodes > 0 ? Math.round((onlineNodes / totalNodes) * 100) : 0;
+                                        
+                                        // 更新节点在线率统计
+                                        $('#online-nodes').text(onlineNodes);
+                                        $('#offline-nodes').text(offlineNodes);
+                                        $('#total-nodes').text(totalNodes);
+                                        $('#node-online-rate').text(onlineRate + '%');
+                                        $('#node-online-rate-value').text(onlineRate + '%');
+                                        
+                                        // 更新图表
+                                        updateNodeOnlineChart(charts, onlineNodes, totalNodes);
+                                    } else {
+                                        Toastr.error(res_data.msg || '获取数据失败');
+                                    }
+                                },
+                                error: function(){
+                                    Toastr.error('服务器连接失败，请检查网络');
+                                }
+                            });
+                            break;
                         case 'response':
                             url += 'GetCurResTime';
+                            $.ajax({
+                                url: url,
+                                type: 'GET',
+                                data: {server_name:selectedServerId,net_name:selectedNetworkId},
+                                dataType: 'json',
+                                success: function(res){
+                                    var res_data = JSON.parse(res);
+                                    if(res_data.code == 0){
+                                        // 先获取当前显示的响应时间作为上次响应时间
+                                        var currentResponseTime = $('#avg-response-time').text();
+                                        var lastResponseTime = 0;
+                                        
+                                        // 如果当前已有响应时间，解析数值部分
+                                        if (currentResponseTime && currentResponseTime !== '--') {
+                                            // 提取数字部分
+                                            lastResponseTime = parseFloat(currentResponseTime.replace(/[^0-9.]/g, ''));
+                                        }
+                                        
+                                        // 获取新的响应时间
+                                        var responseTimeValue = parseFloat(res_data.response) || 0;
+                                        
+                                        // 更新到上次响应时间显示
+                                        $('#last-response-time').text(lastResponseTime + ' ms');
+                                        
+                                        // 设置上次响应时间颜色
+                                        var lastResponseColor = lastResponseTime < 50 ? '#67C23A' : 
+                                                             lastResponseTime < 100 ? '#E6A23C' : '#F56C6C';
+                                        $('#last-response-time').css('color', lastResponseColor);
+                                        
+                                        // 更新本次响应时间
+                                        $('#avg-response-time').text(responseTimeValue + ' ms');
+                                        
+                                        // 设置当前响应时间颜色
+                                        var currentResponseColor = responseTimeValue < 50 ? '#67C23A' : 
+                                                              responseTimeValue < 100 ? '#E6A23C' : '#F56C6C';
+                                        $('#avg-response-time').css('color', currentResponseColor);
+                                        
+                                        // 设置最大延迟
+                                        var maxDelay = 200;
+                                        $('#max-delay').text(maxDelay + ' ms');
+                                        
+                                        // 计算响应时间得分
+                                        var responseTimePercent = (maxDelay - responseTimeValue) / maxDelay * 100;
+                                        responseTimePercent = Math.max(0, Math.min(100, responseTimePercent));
+                                        var responseScore = Math.round(responseTimePercent);
+                                        
+                                        // 更新响应时间得分
+                                        $('#response-score').text(responseScore);
+                                        $('#response-time-score').text(responseScore);
+                                        
+                                        // 设置得分颜色
+                                        var color = responseTimePercent > 80 ? '#67C23A' : 
+                                                   responseTimePercent > 50 ? '#E6A23C' : '#F56C6C';
+                                        $('#response-score').css('color', color);
+                                        
+                                        // 更新圆环图表
+                                        updateResCircle(charts, responseTimeValue, lastResponseTime);
+                                    } else {
+                                        Toastr.error(res_data.response || '获取数据失败');
+                                    }
+                                },
+                                error: function(){
+                                    Toastr.error('服务器连接失败，请检查网络');
+                                }
+                            });
                             break;
                         case 'health':
                             url += 'GetCurHealScore';
@@ -117,39 +218,73 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                             url += 'GetCurTraffic';
                             break;
                     }
-                    $.ajax({
-                        url: url,
-                        type: 'GET',
-                        data: {server_name:selectedServerId,net_name:selectedNetworkId},
-                        dataType: 'json',
-                        success: function(res){
-                            var res_data=JSON.parse(res);
-                            if(res_data.code == 0){
-                                // 更新数据显示
-                                switch(type) {
-                                    case 'response':
-                                        $('#avg-response-time').text(res_data.response + 'ms');
-                                        console.log(document.getElementById('response-time-chart'));
-                                        updateResCircle(charts, res_data.response);
-                                        break;
-                                    case 'health':
-                                        $('#health-score').text(res_data.response);
-                                        console.log(document.getElementById('health-score-chart'));
-                                        updateHealCircle(charts, res_data.response);
-                                        break;
-                                    case 'traffic':
-                                        $('#upload-speed').text(JSON.parse(res_data.response).upload + 'Mbps');
-                                        $('#download-speed').text(JSON.parse(res_data.response).download + 'Mbps');
-                                        break;
+                    
+                    // 如果是非node-online和response类型的请求
+                    if (type !== 'node-online' && type !== 'response') {
+                        $.ajax({
+                            url: url,
+                            type: 'GET',
+                            data: {server_name:selectedServerId,net_name:selectedNetworkId},
+                            dataType: 'json',
+                            success: function(res){
+                                var res_data=JSON.parse(res);
+                                if(res_data.code == 0){
+                                    // 更新数据显示
+                                    switch(type) {
+                                        case 'health':
+                                            $('#health-score').text(res_data.response);
+                                            console.log(document.getElementById('health-score-chart'));
+                                            
+                                            // 获取其他相关得分
+                                            var trafficScore = res_data.traffic_score || 0;
+                                            var responseScore = res_data.response_score || 0;
+                                            var onlineScore = res_data.online_score || 0;
+                                            
+                                            // 如果API没有返回详细得分，尝试计算模拟得分
+                                            if (!res_data.traffic_score) {
+                                                // 流量得分(40%)、响应时间得分(40%)、在线得分(20%)
+                                                var healthScore = parseFloat(res_data.response);
+                                                // 根据总分反推各项得分（模拟）
+                                                onlineScore = 100; // 假设在线
+                                                // 假设流量和响应时间得分相同
+                                                var remaining = healthScore - (onlineScore * 0.2);
+                                                trafficScore = responseScore = Math.round(remaining / 0.8);
+                                            }
+                                            
+                                            // 更新各项得分
+                                            $('#traffic-score-value').text(trafficScore);
+                                            $('#response-score-value').text(responseScore);
+                                            $('#online-score-value').text(onlineScore);
+                                            $('#total-health-score').text(res_data.response);
+                                            
+                                            updateHealCircle(charts, res_data.response, trafficScore, responseScore, onlineScore);
+                                            break;
+                                        case 'traffic':
+                                            var trafficData = JSON.parse(res_data.response);
+                                            $('#upload-speed').text(trafficData.upload + ' Mbps');
+                                            $('#download-speed').text(trafficData.download + ' Mbps');
+                                            
+                                            // 计算总流量
+                                            var totalTraffic = parseFloat(trafficData.upload) + parseFloat(trafficData.download);
+                                            $('#total-traffic').text(totalTraffic.toFixed(1) + ' Mbps');
+                                            
+                                            // 更新最大带宽
+                                            var maxBandwidth = parseFloat(trafficData.MaxRate) || 1000;
+                                            $('#max-bandwidth').text(maxBandwidth.toFixed(0) + ' Mbps');
+                                            
+                                            // 更新图表和流量得分
+                                            updateTrafficCircle(charts, trafficData.upload, trafficData.download, trafficData.MaxRate);
+                                            break;
+                                    }
+                                }else{
+                                    Toastr.error(res_data.response || '获取数据失败');
                                 }
-                            }else{
-                                Toastr.error(res_data.response || '获取数据失败');
+                            },
+                            error: function(){
+                                Toastr.error('服务器连接失败，请检查网络');
                             }
-                        },
-                        error: function(){
-                            Toastr.error('服务器连接失败，请检查网络');
-                        }
-                    });
+                        });
+                    }
                     
                     // 更新最后更新时间
                     var now = new Date();
@@ -163,7 +298,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                     
                     // 恢复按钮状态
                     $btn.prop('disabled', false);
-                    $btn.html('<i class="fa fa-refresh"></i> Ping测试');
+                    $btn.html('<i class="fa fa-refresh"></i> ' + (type === 'response' ? 'Ping测试' : '测试'));
             
                     // 显示成功提示
                     Toastr.success('测试完成');
@@ -243,17 +378,24 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
              * 加载网络数据
              */
             function loadNetworkData(server_name,net_name) {
+                $('#loading-indicator').show();
+                console.log('正在加载网络数据...');
+                
                 $.ajax({
                     url: 'tincui/singlenwdata/GetNetworkData',
                     type: 'GET',
                     data: { server_name: server_name, net_name: net_name },
                     dataType: 'json',
                     success: function(res) {
-                    
                         // 隐藏加载指示器
                         $('#loading-indicator').hide();
                         
                         if (res.code === 1) {
+                            console.log('网络数据加载成功:', res.data);
+                            
+                            // 初始化图表
+                            initCharts();
+                            
                             // 更新页面内容
                             updateDashboard(res.data);
                             
@@ -261,14 +403,16 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                             $('#dashboard-screen').show();
                         } else {
                             // 显示错误，返回选择界面
+                            console.error('加载网络数据失败:', res.msg);
                             Toastr.error(res.msg || '加载网络数据失败');
                             $('#selection-screen').show();
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
                         // 隐藏加载指示器，显示错误
                         $('#loading-indicator').hide();
                         $('#selection-screen').show();
+                        console.error('服务器连接失败:', xhr, status, error);
                         Toastr.error('服务器连接失败，请检查网络');
                     }
                 });
@@ -278,6 +422,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
              * 更新仪表板内容
              */
             function updateDashboard(data) {
+                console.log('更新仪表板内容...');
+               
                 // 更新网络基本信息
                 $('#current-server').text(data.server_name);
                 $('#current-network').text(data.net_name);
@@ -285,20 +431,120 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                 // 更新网络状态标签
                 updateStatusBadge(data.status);
                 
-                // 更新卡片数据
-                $('#avg-response-time').text(data.response_time);
-                $('#health-score').text(data.health_score);
+                // 更新节点在线率指标 (默认数据)
+                var onlineNodes = data.online_nodes || 0;
+                var totalNodes = data.total_nodes || 0;
+                
+                // 计算离线节点数和在线率
+                var offlineNodes = totalNodes - onlineNodes;
+                var onlineRate = totalNodes > 0 ? Math.round((onlineNodes / totalNodes) * 100) : 0;
+                
+                // 更新节点在线率卡片数据
+                $('#online-nodes').text(onlineNodes);
+                $('#offline-nodes').text(offlineNodes);
+                $('#total-nodes').text(totalNodes);
+                $('#node-online-rate').text(onlineRate + '%');
+                $('#node-online-rate-value').text(onlineRate + '%');
+                
+                // 设置在线率颜色
+                var onlineRateColor = onlineRate >= 80 ? '#67C23A' :
+                                    onlineRate >= 50 ? '#E6A23C' : '#F56C6C';
+                $('#node-online-rate').css('color', onlineRateColor);
+                
+                // 更新响应时间指标
+                var responseTime = parseFloat(data.response_time) || 0;
+                var maxResponseTime = 200; // 最大响应时间（ms）
+                
+                // 计算响应时间得分
+                var responseTimePercent = (maxResponseTime - responseTime) / maxResponseTime * 100;
+                responseTimePercent = Math.max(0, Math.min(100, responseTimePercent));
+                var responseScore = Math.round(responseTimePercent);
+                
+                // 设置响应时间颜色
+                var responseColor = responseScore >= 80 ? '#67C23A' :
+                                   responseScore >= 50 ? '#E6A23C' : '#F56C6C';
+                
+                // 设置当前响应时间颜色
+                var currentResponseColor = responseTime < 50 ? '#67C23A' : 
+                                        responseTime < 100 ? '#E6A23C' : '#F56C6C';
+                
+                // 更新响应时间卡片数据
+                $('#avg-response-time').text(responseTime + ' ms');
+                $('#avg-response-time').css('color', currentResponseColor);
+                $('#last-response-time').text('0 ms'); // 初始无上次响应时间
+                $('#max-delay').text(maxResponseTime + ' ms');
+                $('#response-score').text(responseScore);
+                $('#response-score').css('color', responseColor);
+                $('#response-time-score').text(responseScore);
+                
+                // 更新健康分数指标
+                var healthScore = parseFloat(data.health_score) || 0;
+                var trafficScore = parseFloat(data.traffic_score) || 0;
+                var responseScore = parseFloat(data.response_score) || 0;
+                var onlineScore = parseFloat(data.online_score) || 0;
+                
+                // 设置健康分数颜色
+                var healthColor = healthScore < 60 ? '#F56C6C' : 
+                               healthScore < 80 ? '#E6A23C' : '#67C23A';
+                
+                $('#health-score').text(healthScore);
+                $('#health-score').css('color', healthColor);
+                $('#traffic-score-value').text(trafficScore);
+                $('#response-score-value').text(responseScore);
+                $('#online-score-value').text(onlineScore);
+                $('#total-health-score').text(healthScore);
+                
+                // 更新流量卡片数据
                 $('#upload-speed').text(data.traffic.upload);
                 $('#download-speed').text(data.traffic.download);
-                $('#avg-recovery-time').text(data.avg_recovery_time);
+                $('#total-traffic').text((parseFloat(data.traffic.upload) + parseFloat(data.traffic.download)).toFixed(1) + ' Mbps');
+                $('#max-bandwidth').text(data.max_bandwidth);
                 
-                // 初始化并更新图表
-                initCharts();
-                updateCharts(charts, data);
-                updateResCircle(charts, data.response_time);
-                updateHealCircle(charts, data.health_score);
+                // 计算并显示流量得分
+                var totalTraffic = parseFloat(data.traffic.upload) + parseFloat(data.traffic.download);
+                var maxBandwidth = parseFloat(data.max_bandwidth) || 1000;
+                var trafficPercent = (totalTraffic / maxBandwidth) * 100;
+                var trafficScore = Math.round(100 - trafficPercent);
+                trafficScore = Math.max(0, Math.min(100, trafficScore)); // 确保在0-100之间
+                $('#traffic-score').text(trafficScore);
+                
+                // 设置得分颜色
+                var scoreColor = trafficScore < 20 ? '#F56C6C' :
+                                 trafficScore < 50 ? '#E6A23C' : '#67C23A';
+                $('#traffic-score').css('color', scoreColor);
+                
+                // 确保趋势图数据格式正确
+                console.log('处理趋势图数据...');
+                
+                // 检查健康分数趋势数据
+                if (!data.health_score_trend || !data.health_score_trend.dates || !data.health_score_trend.scores) {
+                    console.warn('健康分数趋势数据格式不正确，使用默认数据');
+                    data.health_score_trend = {
+                        dates: ['无数据'],
+                        scores: [0]
+                    };
+                }
+                
+                // 检查网络中断趋势数据
+                if (!data.disruption_trend || !data.disruption_trend.dates || !data.disruption_trend.counts) {
+                    console.warn('网络中断趋势数据格式不正确，使用默认数据');
+                    data.disruption_trend = {
+                        dates: ['无数据'],
+                        counts: [0]
+                    };
+                }
+                
+                // 更新图表
+                updateNodeOnlineChart(charts, onlineNodes, totalNodes);
+                updateHealCircle(charts, data.health_score, data.traffic_score, data.response_score, data.online_score);
                 updateTrafficCircle(charts, data.traffic.upload, data.traffic.download, data.max_bandwidth);
-                updateRecoveryTrend(charts, data.recovery_trend);
+                updateResCircle(charts, data.response_time, 0); // 初始无上次响应时间
+                
+                // 更新趋势图
+                setTimeout(function() {
+                    console.log('延迟更新趋势图...');
+                    updateCharts(charts, data);
+                }, 500); // 延迟500毫秒更新趋势图，确保DOM已经完全加载
             }
             
             /**
@@ -341,13 +587,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                                 {
                                     value: 50,
                                     itemStyle: {
-                                        color: '#67C23A'
+                                        color: '#67C23A'  // 绿色，表示正常
                                     }
                                 },
                                 {
                                     value: 50,
                                     itemStyle: {
-                                        color: '#E6EBF8'
+                                        color: '#E6EBF8'  // 灰色
                                     }
                                 }
                             ]
@@ -355,6 +601,41 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                     };
                     console.log('设置响应时间图表配置...');
                     charts.responseTimeChart.setOption(responseTimeOption);
+                }
+                
+                // 节点在线率圆环图
+                var nodeOnlineChartDom = document.getElementById('node-online-chart');
+                console.log('节点在线率图表容器:', nodeOnlineChartDom);
+                
+                if (!charts.nodeOnlineChart && nodeOnlineChartDom) {
+                    console.log('初始化节点在线率图表...');
+                    charts.nodeOnlineChart = echarts.init(nodeOnlineChartDom);
+                    var nodeOnlineOption = {
+                        series: [{
+                            type: 'pie',
+                            radius: ['70%', '90%'],
+                            startAngle: 90,
+                            label: {
+                                show: false
+                            },
+                            data: [
+                                {
+                                    value: 60,
+                                    itemStyle: {
+                                        color: '#67C23A'  // 绿色，表示在线
+                                    }
+                                },
+                                {
+                                    value: 40,
+                                    itemStyle: {
+                                        color: '#E6EBF8'  // 灰色
+                                    }
+                                }
+                            ]
+                        }]
+                    };
+                    console.log('设置节点在线率图表配置...');
+                    charts.nodeOnlineChart.setOption(nodeOnlineOption);
                 }
                 
                 // 健康分数圆环图
@@ -424,79 +705,70 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                     charts.trafficChart.setOption(trafficOption);
                 }
                 
-                // 恢复时间趋势图
-                var recoveryTrendChartDom = document.getElementById('recovery-trend-chart');
-                if (!charts.recoveryTrendChart && recoveryTrendChartDom) {
-                    console.log('初始化恢复时间趋势图...');
-                    charts.recoveryTrendChart = echarts.init(recoveryTrendChartDom);
-                    var recoveryTrendOption = {
+                // 健康分数趋势图
+                var healthScoreTrendChartDom = document.getElementById('health-score-trend-chart');
+                if (!charts.healthScoreTrendChart && healthScoreTrendChartDom) {
+                    console.log('初始化健康分数趋势图...');
+                    charts.healthScoreTrendChart = echarts.init(healthScoreTrendChartDom);
+                    // 设置一个默认配置，实际数据会在updateCharts中更新
+                    var healthScoreTrendOption = {
                         tooltip: {
-                            trigger: 'axis',
-                            formatter: function(params) {
-                                var data = params[0].data;
-                                return '故障时间: ' + data.startTime + '<br/>' + 
-                                       '恢复用时: ' + data.duration + ' 分钟';
-                            }
+                            trigger: 'axis'
                         },
                         grid: {
                             left: '3%',
                             right: '4%',
-                            bottom: '15%',
-                            top: '10%',
+                            bottom: '3%',
                             containLabel: true
                         },
                         xAxis: {
                             type: 'category',
-                            data: [],
-                            axisLabel: {
-                                interval: 0,
-                                rotate: 45,
-                                formatter: function(value) {
-                                    // 更安全的日期格式处理
-                                    var parts = value.split(' ');
-                                    var datePart = parts[0] ? parts[0].substring(5) : '--';  // 从第5字符开始获取 MM-DD
-                                    var timePart = parts[1] ? parts[1].substring(0, 5) : 'N/A'; // 截取前5个字符 HH:mm
-                                    return datePart + '\n' + timePart;
-                                }
-                            }
+                            data: ['加载中...']
                         },
                         yAxis: {
                             type: 'value',
-                            name: '恢复时间(分钟)',
-                            nameTextStyle: {
-                                padding: [0, 0, 0, 30]
-                            }
+                            min: 0,
+                            max: 100
                         },
                         series: [{
+                            data: [0],
                             type: 'bar',
-                            data: [],
-                            itemStyle: {
-                                color: function(params) {
-                                    // 根据恢复时间设置不同的颜色
-                                    var duration = params.data.duration;
-                                    return duration > 30 ? '#F56C6C' : 
-                                           duration > 10 ? '#E6A23C' : '#67C23A';
-                                }
-                            },
-                            barWidth: '60%',
-                            label: {
-                                show: true,
-                                position: 'top',
-                                formatter: '{c}分钟'
-                            }
+                            barWidth: '60%'
                         }]
                     };
-                    charts.recoveryTrendChart.setOption(recoveryTrendOption);
-                }
-                
-                // 健康分数趋势图
-                if (!charts.healthScoreTrendChart) {
-                    charts.healthScoreTrendChart = echarts.init(document.getElementById('health-score-trend-chart'));
+                    charts.healthScoreTrendChart.setOption(healthScoreTrendOption);
                 }
                 
                 // 网络中断趋势图
-                if (!charts.disruptionTrendChart) {
-                    charts.disruptionTrendChart = echarts.init(document.getElementById('disruption-trend-chart'));
+                var disruptionTrendChartDom = document.getElementById('disruption-trend-chart');
+                if (!charts.disruptionTrendChart && disruptionTrendChartDom) {
+                    console.log('初始化网络中断趋势图...');
+                    charts.disruptionTrendChart = echarts.init(disruptionTrendChartDom);
+                    // 设置一个默认配置，实际数据会在updateCharts中更新
+                    var disruptionTrendOption = {
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: ['加载中...']
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [{
+                            data: [0],
+                            type: 'line',
+                            smooth: true
+                        }]
+                    };
+                    charts.disruptionTrendChart.setOption(disruptionTrendOption);
                 }
                 
                 console.log('图表初始化完成');
@@ -505,15 +777,24 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
             /**
              * 更新图表数据
              */
-            function updateResCircle(charts, value) {
+            function updateResCircle(charts, value, lastValue) {
                 console.log('更新响应时间图表:', value);
+                // 确保所有输入都是数字类型
                 var responseTimeValue = parseFloat(value) || 0;
-                var MaxResponseTime = 500;
+                var lastResponseTimeValue = parseFloat(lastValue) || responseTimeValue;
+                var MaxResponseTime = 200; // 最大延迟时间
+                
+                // 计算响应时间得分 (1-响应时间/最大响应时间)*100
                 var responseTimePercent = (MaxResponseTime-responseTimeValue)/MaxResponseTime * 100;
+                responseTimePercent = Math.max(0, Math.min(100, responseTimePercent)); // 确保在0-100之间
+                
                 if (charts.responseTimeChart) {
+                    // 根据响应时间的百分比确定颜色
                     var color = responseTimePercent > 80 ? '#67C23A' : 
                                responseTimePercent > 50 ? '#E6A23C' : '#F56C6C';
                     console.log('响应时间百分比:', responseTimePercent, '颜色:', color);
+                    
+                    // 更新圆环图表
                     charts.responseTimeChart.setOption({
                         series: [{
                             data: [
@@ -532,12 +813,40 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                             ]
                         }]
                     });
+                    
+                    // 更新响应时间数据
+                    $('#avg-response-time').text(responseTimeValue + ' ms');
+                    $('#last-response-time').text(lastResponseTimeValue + ' ms');
+                    $('#max-delay').text(MaxResponseTime + ' ms');
+                    
+                    // 更新响应时间得分
+                    var responseScore = Math.round(responseTimePercent);
+                    $('#response-score').text(responseScore);
+                    $('#response-time-score').text(responseScore);
+                    
+                    // 设置得分颜色
+                    $('#response-score').css('color', color);
+                    
+                    // 更新DOM上各项数据的显示颜色
+                    var currentResponseColor = responseTimeValue < 50 ? '#67C23A' : 
+                                              responseTimeValue < 100 ? '#E6A23C' : '#F56C6C';
+                    $('#avg-response-time').css('color', currentResponseColor);
+                    
+                    // 设置上次响应时间颜色
+                    var lastResponseColor = lastResponseTimeValue < 50 ? '#67C23A' : 
+                                          lastResponseTimeValue < 100 ? '#E6A23C' : '#F56C6C';
+                    $('#last-response-time').css('color', lastResponseColor);
                 }
             }
 
-            function updateHealCircle(charts, value) {
+            function updateHealCircle(charts, value, trafficScore, responseScore, onlineScore) {
                 console.log('更新健康分数图表:', value);
+                // 确保所有参数都是数字
                 var healthScoreValue = parseFloat(value) || 0;
+                trafficScore = parseFloat(trafficScore) || 0;
+                responseScore = parseFloat(responseScore) || 0;
+                onlineScore = parseFloat(onlineScore) || 0;
+                
                 if (charts.healthScoreChart) {
                     var color = healthScoreValue < 60 ? '#F56C6C' : 
                                healthScoreValue < 80 ? '#E6A23C' : '#67C23A';
@@ -560,6 +869,16 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                             ]
                         }]
                     });
+                    
+                    // 更新健康分数值
+                    $('#health-score').text(healthScoreValue);
+                    $('#health-score').css('color', color);
+                    
+                    // 更新各个得分
+                    $('#traffic-score-value').text(trafficScore);
+                    $('#response-score-value').text(responseScore);
+                    $('#online-score-value').text(onlineScore);
+                    $('#total-health-score').text(healthScoreValue);
                 }
             }
 
@@ -571,6 +890,10 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                 
                 var totalTraffic = upload + download;
                 var trafficPercent = (totalTraffic / maxBandwidth) * 100;
+                // 计算流量得分（满分100分），当总速率越接近最大带宽，得分越低
+                var trafficScore = Math.round(100 - trafficPercent);
+                // 确保得分在0-100之间
+                trafficScore = Math.max(0, Math.min(100, trafficScore));
                 
                 if (charts.trafficChart) {
                     var color = trafficPercent > 80 ? '#F56C6C' : 
@@ -595,93 +918,230 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'echarts', '../tincui
                     });
                     
                     // 更新总流量显示，确保是数字类型
-                    $('#total-traffic').text(Number(totalTraffic).toFixed(1));
+                    $('#total-traffic').text(Number(totalTraffic).toFixed(1) + ' Mbps');
                     
                     // 更新上传下载速度显示
                     $('#upload-speed').text(upload.toFixed(1) + ' Mbps');
                     $('#download-speed').text(download.toFixed(1) + ' Mbps');
-                }
-            }
-
-            function updateRecoveryTrend(charts, recoveryData) {
-                if (charts.recoveryTrendChart) {
-                    var dates = [];
-                    var durations = [];
                     
-                    // 确保数据按时间排序（使用新的date字段）
-                    recoveryData.sort(function(a, b) {
-                        return new Date(a.date) - new Date(b.date);
-                    });
+                    // 更新最大带宽显示
+                    $('#max-bandwidth').text(maxBandwidth.toFixed(0) + ' Mbps');
                     
-                    recoveryData.forEach(function(item) {
-                        dates.push(item.date);  // 使用date字段
-                        durations.push({
-                            value: item.duration,
-                            date: item.date,    // 添加date字段到数据项
-                            duration: item.duration
-                        });
-                    });
-                    
-                    charts.recoveryTrendChart.setOption({
-                        xAxis: {
-                            data: dates
-                        },
-                        series: [{
-                            data: durations.map(function(d) {
-                                // 保持数据格式兼容性
-                                return {
-                                    value: d.duration,
-                                    startTime: d.date,  // 保持原字段用于tooltip
-                                    duration: d.duration
-                                };
-                            })
-                        }]
-                    });
+                    // 更新流量得分显示
+                    $('#traffic-score').text(trafficScore);
+                    // 设置得分颜色
+                    var scoreColor = trafficScore < 20 ? '#F56C6C' :
+                                     trafficScore < 50 ? '#E6A23C' : '#67C23A';
+                    $('#traffic-score').css('color', scoreColor);
                 }
             }
 
             function updateCharts(charts, data) {
+                console.log('开始更新趋势图表...');
+                console.log('健康分数趋势数据:', data.health_score_trend);
+                console.log('网络中断趋势数据:', data.disruption_trend);
+                
+                // 确保两个图表实例存在
+                if (!charts.healthScoreTrendChart) {
+                    console.log('初始化健康分数趋势图...');
+                    var healthScoreTrendDom = document.getElementById('health-score-trend-chart');
+                    if (healthScoreTrendDom) {
+                        charts.healthScoreTrendChart = echarts.init(healthScoreTrendDom);
+                    } else {
+                        console.error('健康分数趋势图DOM元素不存在!');
+                    }
+                }
+                
+                if (!charts.disruptionTrendChart) {
+                    console.log('初始化网络中断趋势图...');
+                    var disruptionTrendDom = document.getElementById('disruption-trend-chart');
+                    if (disruptionTrendDom) {
+                        charts.disruptionTrendChart = echarts.init(disruptionTrendDom);
+                    } else {
+                        console.error('网络中断趋势图DOM元素不存在!');
+                    }
+                }
+                
+                // 确保数据格式正确
+                if (!data.health_score_trend || !data.health_score_trend.dates || !data.health_score_trend.scores) {
+                    console.error('健康分数趋势数据格式不正确:', data.health_score_trend);
+                    // 创建默认数据
+                    data.health_score_trend = {
+                        dates: ['无数据'],
+                        scores: [0]
+                    };
+                }
+                
+                if (!data.disruption_trend || !data.disruption_trend.dates || !data.disruption_trend.counts) {
+                    console.error('网络中断趋势数据格式不正确:', data.disruption_trend);
+                    // 创建默认数据
+                    data.disruption_trend = {
+                        dates: ['无数据'],
+                        counts: [0]
+                    };
+                }
+                
                 // 更新健康分数趋势图
-                var healthScoreTrendOption = {
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: data.health_score_trend.dates
-                    },
-                    yAxis: {
-                        type: 'value',
-                        min: 0,
-                        max: 100
-                    },
-                    series: [{
-                        data: data.health_score_trend.scores,
-                        type: 'line',
-                        smooth: true
-                    }]
-                };
-                charts.healthScoreTrendChart.setOption(healthScoreTrendOption);
+                if (charts.healthScoreTrendChart) {
+                    var healthScoreTrendOption = {
+                        tooltip: {
+                            trigger: 'axis',
+                            formatter: function(params) {
+                                return params[0].name + '<br/>' + 
+                                       '健康分数: ' + params[0].value;
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            top: '30px',
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: data.health_score_trend.dates
+                        },
+                        yAxis: {
+                            type: 'value',
+                            min: 0,
+                            max: 100,
+                            name: '分数',
+                            nameTextStyle: {
+                                padding: [0, 0, 0, 30]
+                            }
+                        },
+                        series: [{
+                            name: '健康分数',
+                            data: data.health_score_trend.scores,
+                            type: 'bar',
+                            barWidth: '60%',
+                            itemStyle: {
+                                color: function(params) {
+                                    // 根据健康分数设置柱状图颜色
+                                    var value = params.value;
+                                    if (value >= 80) {
+                                        return '#67C23A'; // 绿色
+                                    } else if (value >= 60) {
+                                        return '#E6A23C'; // 黄色
+                                    } else {
+                                        return '#F56C6C'; // 红色
+                                    }
+                                }
+                            },
+                            label: {
+                                show: true,
+                                position: 'top',
+                                formatter: '{c}'
+                            }
+                        }]
+                    };
+                    console.log('设置健康分数趋势图配置...');
+                    charts.healthScoreTrendChart.setOption(healthScoreTrendOption, true);
+                    charts.healthScoreTrendChart.resize();
+                }
                 
                 // 更新网络中断趋势图
-                var disruptionTrendOption = {
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: data.disruption_trend.dates
-                    },
-                    yAxis: {
-                        type: 'value'
-                    },
-                    series: [{
-                        data: data.disruption_trend.counts,
-                        type: 'line',
-                        smooth: true
-                    }]
-                };
-                charts.disruptionTrendChart.setOption(disruptionTrendOption);
+                if (charts.disruptionTrendChart) {
+                    var disruptionTrendOption = {
+                        tooltip: {
+                            trigger: 'axis',
+                            formatter: function(params) {
+                                return params[0].name + '<br/>' + 
+                                       '中断次数: ' + params[0].value;
+                            }
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            top: '30px',
+                            containLabel: true
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: data.disruption_trend.dates
+                        },
+                        yAxis: {
+                            type: 'value',
+                            name: '次数',
+                            nameTextStyle: {
+                                padding: [0, 0, 0, 30]
+                            }
+                        },
+                        series: [{
+                            name: '中断次数',
+                            data: data.disruption_trend.counts,
+                            type: 'line',
+                            smooth: true,
+                            lineStyle: {
+                                width: 3,
+                                color: '#409EFF'
+                            },
+                            symbolSize: 8,
+                            itemStyle: {
+                                color: '#409EFF'
+                            },
+                            areaStyle: {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                    { offset: 0, color: 'rgba(64, 158, 255, 0.7)' },
+                                    { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+                                ])
+                            }
+                        }]
+                    };
+                    console.log('设置网络中断趋势图配置...');
+                    charts.disruptionTrendChart.setOption(disruptionTrendOption, true);
+                    charts.disruptionTrendChart.resize();
+                }
+                
+                console.log('趋势图表更新完成');
+            }
+
+            function updateNodeOnlineChart(charts, onlineNodes, totalNodes) {
+                // 确保输入是数字
+                onlineNodes = parseInt(onlineNodes) || 0;
+                totalNodes = parseInt(totalNodes) || 0; // 避免除以0
+                
+                // 计算在线率百分比
+                var onlineRate = totalNodes==0?0:Math.round((onlineNodes / totalNodes) * 100);
+                var offlineNodes = totalNodes - onlineNodes;
+                
+                // 确定颜色
+                var color = onlineRate >= 80 ? '#67C23A' :  // 绿色
+                           onlineRate >= 50 ? '#E6A23C' :  // 黄色
+                           '#F56C6C';                      // 红色
+                
+                if (charts.nodeOnlineChart) {
+                    charts.nodeOnlineChart.setOption({
+                        series: [{
+                            data: [
+                                {
+                                    value: onlineRate,
+                                    itemStyle: {
+                                        color: color
+                                    }
+                                },
+                                {
+                                    value: 100 - onlineRate,
+                                    itemStyle: {
+                                        color: '#E6EBF8'
+                                    }
+                                }
+                            ]
+                        }]
+                    });
+                    
+                    // 更新显示数据
+                    $('#online-nodes').text(onlineNodes);
+                    $('#offline-nodes').text(offlineNodes);
+                    $('#total-nodes').text(totalNodes);
+                    $('#node-online-rate').text(onlineRate + '%');
+                    $('#node-online-rate-value').text(onlineRate + '%');
+                    
+                    // 设置在线率文字颜色
+                    $('#node-online-rate').css('color', color);
+                }
             }
         }
     };

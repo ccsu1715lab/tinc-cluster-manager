@@ -268,16 +268,124 @@
                     <div class="col-md-3">
                         <div class="panel panel-default dashboard-card">
                             <div class="panel-heading">
-                                <h3 class="panel-title">平均响应时间</h3>
+                                <h3 class="panel-title">响应时间</h3>
                                 <button class="btn btn-sm btn-primary ping-test-btn" data-type="response">
                                     <i class="fa fa-refresh"></i> Ping测试
                                 </button>
                             </div>
                             <div class="panel-body">
+                                <style>
+                                /* 响应时间卡片样式 */
+                                .response-time-container {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                }
+                                
+                                .response-chart-container {
+                                    position: relative;
+                                    width: 120px;
+                                    height: 120px;
+                                }
+                                
+                                .response-total-score {
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                    font-size: 20px;
+                                    font-weight: bold;
+                                }
+                                
+                                .response-stats {
+                                    width: 100%;
+                                    margin-top: 10px;
+                                }
+                                
+                                .response-stat-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-bottom: 5px;
+                                    padding: 5px 8px;
+                                    border-radius: 4px;
+                                }
+                                
+                                .response-stat-row:nth-child(odd) {
+                                    background-color: #f9f9f9;
+                                }
+                                
+                                .response-stat-label {
+                                    display: flex;
+                                    align-items: center;
+                                }
+                                
+                                .response-stat-label i {
+                                    margin-right: 5px;
+                                    width: 14px;
+                                    text-align: center;
+                                }
+                                
+                                .response-stat-value {
+                                    font-weight: bold;
+                                }
+                                
+                                .current-response-color {
+                                    color: #67C23A;
+                                }
+                                
+                                .last-response-color {
+                                    color: #409EFF;
+                                }
+                                
+                                .max-delay-color {
+                                    color: #F56C6C;
+                                }
+                                
+                                .response-score-color {
+                                    color: #E6A23C;
+                                }
+                                </style>
+                                
                                 <div class="response-time-container">
-                                    <div id="response-time-chart" style="width: 120px; height: 120px;"></div>
-                                    <div class="response-time-value">
-                                        <span id="avg-response-time" class="dashboard-value">--</span>
+                                    <!-- 圆环图表容器 -->
+                                    <div class="response-chart-container">
+                                        <div id="response-time-chart" style="width: 120px; height: 120px;"></div>
+                                        <div class="response-total-score" id="response-score">--</div>
+                                    </div>
+                                    
+                                    <!-- 响应时间统计信息 -->
+                                    <div class="response-stats">
+                                        <div class="response-stat-row">
+                                            <div class="response-stat-label">
+                                                <i class="fa fa-clock-o current-response-color"></i>
+                                                <span>当前响应时间</span>
+                                            </div>
+                                            <div class="response-stat-value current-response-color" id="avg-response-time">-- ms</div>
+                                        </div>
+                                        
+                                        <div class="response-stat-row">
+                                            <div class="response-stat-label">
+                                                <i class="fa fa-history last-response-color"></i>
+                                                <span>上次响应时间</span>
+                                            </div>
+                                            <div class="response-stat-value last-response-color" id="last-response-time">-- ms</div>
+                                        </div>
+                                        
+                                        <div class="response-stat-row">
+                                            <div class="response-stat-label">
+                                                <i class="fa fa-exclamation-triangle max-delay-color"></i>
+                                                <span>最大延迟</span>
+                                            </div>
+                                            <div class="response-stat-value max-delay-color" id="max-delay">-- ms</div>
+                                        </div>
+                                        
+                                        <div class="response-stat-row">
+                                            <div class="response-stat-label">
+                                                <i class="fa fa-tachometer response-score-color"></i>
+                                                <span>响应时间得分</span>
+                                            </div>
+                                            <div class="response-stat-value response-score-color" id="response-time-score">--</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="update-time">上次更新: <span class="time">--</span></div>
@@ -294,10 +402,118 @@
                                 </button>
                             </div>
                             <div class="panel-body">
+                                <style>
+                                /* 健康分数卡片样式 */
+                                .health-score-container {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                }
+                                
+                                .health-chart-container {
+                                    position: relative;
+                                    width: 120px;
+                                    height: 120px;
+                                }
+                                
+                                .health-total-score {
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                    font-size: 20px;
+                                    font-weight: bold;
+                                }
+                                
+                                .health-stats {
+                                    width: 100%;
+                                    margin-top: 10px;
+                                }
+                                
+                                .health-stat-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-bottom: 5px;
+                                    padding: 5px 8px;
+                                    border-radius: 4px;
+                                }
+                                
+                                .health-stat-row:nth-child(odd) {
+                                    background-color: #f9f9f9;
+                                }
+                                
+                                .health-stat-label {
+                                    display: flex;
+                                    align-items: center;
+                                }
+                                
+                                .health-stat-label i {
+                                    margin-right: 5px;
+                                    width: 14px;
+                                    text-align: center;
+                                }
+                                
+                                .health-stat-value {
+                                    font-weight: bold;
+                                }
+                                
+                                .traffic-score-color {
+                                    color: #E6A23C;
+                                }
+                                
+                                .response-score-color {
+                                    color: #409EFF;
+                                }
+                                
+                                .online-score-color {
+                                    color: #67C23A;
+                                }
+                                
+                                .total-score-color {
+                                    color: #F56C6C;
+                                }
+                                </style>
+                                
                                 <div class="health-score-container">
-                                    <div id="health-score-chart" style="width: 120px; height: 120px;"></div>
-                                    <div class="health-score-value">
-                                        <span id="health-score" class="dashboard-value">--</span>
+                                    <!-- 圆环图表容器 -->
+                                    <div class="health-chart-container">
+                                        <div id="health-score-chart" style="width: 120px; height: 120px;"></div>
+                                        <div class="health-total-score" id="health-score">--</div>
+                                    </div>
+                                    
+                                    <!-- 健康分数统计信息 -->
+                                    <div class="health-stats">
+                                        <div class="health-stat-row">
+                                            <div class="health-stat-label">
+                                                <i class="fa fa-exchange traffic-score-color"></i>
+                                                <span>流量得分</span>
+                                            </div>
+                                            <div class="health-stat-value traffic-score-color" id="traffic-score-value">--</div>
+                                        </div>
+                                        
+                                        <div class="health-stat-row">
+                                            <div class="health-stat-label">
+                                                <i class="fa fa-clock-o response-score-color"></i>
+                                                <span>响应时间得分</span>
+                                            </div>
+                                            <div class="health-stat-value response-score-color" id="response-score-value">--</div>
+                                        </div>
+                                        
+                                        <div class="health-stat-row">
+                                            <div class="health-stat-label">
+                                                <i class="fa fa-signal online-score-color"></i>
+                                                <span>在线得分</span>
+                                            </div>
+                                            <div class="health-stat-value online-score-color" id="online-score-value">--</div>
+                                        </div>
+                                        
+                                        <div class="health-stat-row">
+                                            <div class="health-stat-label">
+                                                <i class="fa fa-heartbeat total-score-color"></i>
+                                                <span>总得分</span>
+                                            </div>
+                                            <div class="health-stat-value total-score-color" id="total-health-score">--</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="update-time">上次更新: <span class="time">--</span></div>
@@ -314,81 +530,117 @@
                                 </button>
                             </div>
                             <div class="panel-body">
-                                <div class="traffic-container">
-                                    <div class="upload-info">
-                                        <div class="traffic-item upload">
-                                            <i class="fa fa-arrow-up"></i>
-                                            <span id="upload-speed">--</span>
-                                        </div>
-                                        <small>上传</small>
-                                    </div>
-                                    
-                                    <div id="traffic-chart" style="width: 120px; height: 120px;"></div>
-                                    
-                                    <div class="download-info">
-                                        <div class="traffic-item download">
-                                            <i class="fa fa-arrow-down"></i>
-                                            <span id="download-speed">--</span>
-                                        </div>
-                                        <small>下载</small>
-                                    </div>
-                                </div>
-                                
                                 <style>
-                                /* 新增流量卡片样式 */
+                                /* 流量卡片样式 */
                                 .traffic-container {
-                                    position: relative;
-                                    height: 120px;
                                     display: flex;
                                     flex-direction: column;
                                     align-items: center;
+                                }
+                                
+                                .traffic-chart-container {
+                                    position: relative;
+                                    width: 120px;
+                                    height: 120px;
+                                }
+                                
+                                .traffic-score {
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                    font-size: 20px;
+                                    font-weight: bold;
                                 }
                                 
                                 .traffic-stats {
-                                    display: grid;
-                                    grid-template-columns: 1fr 1fr;
-                                    gap: 15px;
                                     width: 100%;
-                                    padding: 0 20px;
                                     margin-top: 10px;
                                 }
                                 
-                                .traffic-stat {
+                                .traffic-stat-row {
                                     display: flex;
-                                    flex-direction: column;
+                                    justify-content: space-between;
+                                    margin-bottom: 5px;
+                                    padding: 5px 8px;
+                                    border-radius: 4px;
+                                }
+                                
+                                .traffic-stat-row:nth-child(odd) {
+                                    background-color: #f9f9f9;
+                                }
+                                
+                                .traffic-stat-label {
+                                    display: flex;
                                     align-items: center;
-                                    padding: 6px;
-                                    background: #f8f9fa;
-                                    border-radius: 8px;
                                 }
                                 
-                                .traffic-stat i {
-                                    font-size: 14px;
-                                    margin-bottom: 2px;
+                                .traffic-stat-label i {
+                                    margin-right: 5px;
+                                    width: 14px;
+                                    text-align: center;
                                 }
                                 
-                                .traffic-stat.upload {
+                                .traffic-stat-value {
+                                    font-weight: bold;
+                                }
+                                
+                                .upload-color {
                                     color: #67C23A;
                                 }
                                 
-                                .traffic-stat.download {
+                                .download-color {
                                     color: #409EFF;
+                                }
+                                
+                                .total-color {
+                                    color: #E6A23C;
+                                }
+                                
+                                .bandwidth-color {
+                                    color: #909399;
                                 }
                                 </style>
                                 
                                 <div class="traffic-container">
                                     <!-- 圆环图表容器 -->
-                                    <div id="traffic-chart" style="width: 120px; height: 120px;"></div>
+                                    <div class="traffic-chart-container">
+                                        <div id="traffic-chart" style="width: 120px; height: 120px;"></div>
+                                        <div class="traffic-score" id="traffic-score">--</div>
+                                    </div>
                                     
-                                    <!-- 统计信息 -->
+                                    <!-- 流量统计信息 -->
                                     <div class="traffic-stats">
-                                        <div class="traffic-stat upload">
-                                            <i class="fa fa-arrow-up"></i>
-                                            <span id="upload-speed">--</span>
+                                        <div class="traffic-stat-row">
+                                            <div class="traffic-stat-label">
+                                                <i class="fa fa-arrow-up upload-color"></i>
+                                                <span>上传速率</span>
+                                            </div>
+                                            <div class="traffic-stat-value upload-color" id="upload-speed">--</div>
                                         </div>
-                                        <div class="traffic-stat download">
-                                            <i class="fa fa-arrow-down"></i>
-                                            <span id="download-speed">--</span>
+                                        
+                                        <div class="traffic-stat-row">
+                                            <div class="traffic-stat-label">
+                                                <i class="fa fa-arrow-down download-color"></i>
+                                                <span>下载速率</span>
+                                            </div>
+                                            <div class="traffic-stat-value download-color" id="download-speed">--</div>
+                                        </div>
+                                        
+                                        <div class="traffic-stat-row">
+                                            <div class="traffic-stat-label">
+                                                <i class="fa fa-exchange total-color"></i>
+                                                <span>总速率</span>
+                                            </div>
+                                            <div class="traffic-stat-value total-color" id="total-traffic">--</div>
+                                        </div>
+                                        
+                                        <div class="traffic-stat-row">
+                                            <div class="traffic-stat-label">
+                                                <i class="fa fa-tachometer bandwidth-color"></i>
+                                                <span>最大带宽</span>
+                                            </div>
+                                            <div class="traffic-stat-value bandwidth-color" id="max-bandwidth">--</div>
                                         </div>
                                     </div>
                                 </div>
@@ -400,15 +652,125 @@
                     <div class="col-md-3">
                         <div class="panel panel-default dashboard-card">
                             <div class="panel-heading">
-                                <h3 class="panel-title">平均恢复时间</h3>
+                                <h3 class="panel-title">节点在线率</h3>
+                                <button class="btn btn-sm btn-primary ping-test-btn" data-type="node-online">
+                                    <i class="fa fa-refresh"></i> 更新
+                                </button>
                             </div>
                             <div class="panel-body">
-                                <div class="recovery-container">
-                                    <div class="recovery-value">
-                                        <span id="avg-recovery-time" class="dashboard-value">--</span>
-                                        <small>分钟</small>
+                                <style>
+                                /* 节点在线率卡片样式 */
+                                .node-online-container {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                }
+                                
+                                .node-chart-container {
+                                    position: relative;
+                                    width: 120px;
+                                    height: 120px;
+                                }
+                                
+                                .node-online-rate {
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                    font-size: 20px;
+                                    font-weight: bold;
+                                }
+                                
+                                .node-stats {
+                                    width: 100%;
+                                    margin-top: 10px;
+                                }
+                                
+                                .node-stat-row {
+                                    display: flex;
+                                    justify-content: space-between;
+                                    margin-bottom: 5px;
+                                    padding: 5px 8px;
+                                    border-radius: 4px;
+                                }
+                                
+                                .node-stat-row:nth-child(odd) {
+                                    background-color: #f9f9f9;
+                                }
+                                
+                                .node-stat-label {
+                                    display: flex;
+                                    align-items: center;
+                                }
+                                
+                                .node-stat-label i {
+                                    margin-right: 5px;
+                                    width: 14px;
+                                    text-align: center;
+                                }
+                                
+                                .node-stat-value {
+                                    font-weight: bold;
+                                }
+                                
+                                .online-node-color {
+                                    color: #67C23A;
+                                }
+                                
+                                .offline-node-color {
+                                    color: #F56C6C;
+                                }
+                                
+                                .total-node-color {
+                                    color: #409EFF;
+                                }
+                                
+                                .online-rate-color {
+                                    color: #E6A23C;
+                                }
+                                </style>
+                                
+                                <div class="node-online-container">
+                                    <!-- 圆环图表容器 -->
+                                    <div class="node-chart-container">
+                                        <div id="node-online-chart" style="width: 120px; height: 120px;"></div>
+                                        <div class="node-online-rate" id="node-online-rate">--</div>
                                     </div>
-                                    <div id="recovery-trend-chart" style="width: 100%; height: 100px;"></div>
+                                    
+                                    <!-- 节点在线率统计信息 -->
+                                    <div class="node-stats">
+                                        <div class="node-stat-row">
+                                            <div class="node-stat-label">
+                                                <i class="fa fa-check-circle online-node-color"></i>
+                                                <span>在线节点</span>
+                                            </div>
+                                            <div class="node-stat-value online-node-color" id="online-nodes">--</div>
+                                        </div>
+                                        
+                                        <div class="node-stat-row">
+                                            <div class="node-stat-label">
+                                                <i class="fa fa-times-circle offline-node-color"></i>
+                                                <span>离线节点</span>
+                                            </div>
+                                            <div class="node-stat-value offline-node-color" id="offline-nodes">--</div>
+                                        </div>
+                                        
+                                        <div class="node-stat-row">
+                                            <div class="node-stat-label">
+                                                <i class="fa fa-list-ul total-node-color"></i>
+                                                <span>总节点数</span>
+                                            </div>
+                                            <div class="node-stat-value total-node-color" id="total-nodes">--</div>
+                                        </div>
+                                        
+                                        <div class="node-stat-row">
+                                            <div class="node-stat-label">
+                                                <i class="fa fa-percent online-rate-color"></i>
+                                                <span>在线率</span>
+                                            </div>
+                                            <div class="node-stat-value online-rate-color" id="node-online-rate-value">--</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="update-time">上次更新: <span class="time">--</span></div>
                             </div>

@@ -297,6 +297,22 @@ class Tincs extends Backend
         }
     }
 
+
+    //获取单网节点在线日志
+    public function GetNodeonlineRate(){
+        if($this->request->isAjax())
+        try{
+            $servername=$this->request->post('server_name');
+            $net_name=$this->request->post('net_name');
+            if($servername==null||$net_name==null)return json_encode(array(code=>1,response=>"参数为空"));
+            $onlinenode=Db::table('fa_node')->where('server_name',$server_name)->where('net_name',$net_name)->where('status',"连接正常")->count();
+            $cntnode=Db::table('fa_node')->where('server_name',$server_name)->where('net_name',$net_name)->count();
+            return json_encode(array('code'=>0,'response'=>array('onlinenode'=>$onlinenode,'cntnode'=>$cntnode)));
+        }catch(Exception $e){
+            json_encode(array('code'=>1,'response'=>$e->getMessage()));
+    }  
+    }
+
     public function GetHealthTrend()
     {
         try{

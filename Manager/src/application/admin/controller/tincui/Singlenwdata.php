@@ -81,6 +81,19 @@ class Singlenwdata extends Backend
         $servername = $this->request->get('server_name');
         $netname = $this->request->get('net_name');
         $current_net=Db::table('fa_net')->where('server_name',$servername)->where('net_name',$netname)->find();
+        
+        // 获取节点在线率数据
+        $onlineNodes = Db::table('fa_node')
+            ->where('server_name', $servername)
+            ->where('net_name', $netname)
+            ->where('status', '连接正常')
+            ->count();
+        
+        $totalNodes = Db::table('fa_node')
+            ->where('server_name', $servername)
+            ->where('net_name', $netname)
+            ->count();
+        
         $res_response_time=$this->GetCurResTime($servername,$netname);
         $arr_response_time=json_decode($res_response_time,true);
         $response_time=$arr_response_time['response'];
@@ -104,6 +117,20 @@ class Singlenwdata extends Backend
             $RevTimeTrend['dates'] = [];
             $RevTimeTrend['duration'] = [];
         }
+        
+        // 计算各项得分
+        // 流量得分：总流量与最大带宽的比例，计算为 (1 - 总流量/最大带宽) * 100
+        $trafficScore = round((1 - (($upload + $download) / $MaxRate)) * 100);
+        $trafficScore = max(0, min(100, $trafficScore)); // 确保在0-100之间
+        
+        // 响应时间得分：假设最大响应时间为200ms，计算为 (1 - 响应时间/最大响应时间) * 100
+        $maxResponseTime = 200;
+        $responseScore = round((1 - ($response_time / $maxResponseTime)) * 100);
+        $responseScore = max(0, min(100, $responseScore)); // 确保在0-100之间
+        
+        // 在线得分：在线为100分，离线为0分
+        $onlineScore = ($current_net['status'] == '在线') ? 100 : 0;
+        
         // 返回静态测试数据，不查询数据库
         // 生成7天的日期数据
         $dates = [];
@@ -116,15 +143,20 @@ class Singlenwdata extends Backend
         $mockData = [        
             'net_name' => $netname,
             'server_name' => $servername,
-            'status' => rand(0, 10) > 8 ? '离线' : '在线',
-            'response_time' => rand(5, 100),
-            'health_score' => rand(60, 95),
+            'status' => $current_net['status'] ?: '在线',
+            'response_time' => $response_time,
+            'health_score' => $health_score,
+            'traffic_score' => $trafficScore,
+            'response_score' => $responseScore,
+            'online_score' => $onlineScore,
+            'online_nodes' => $onlineNodes,
+            'total_nodes' => $totalNodes,
             'avg_recovery_time' => $avg_recovery_time,
             'traffic' => [
-                'upload' => rand(50, 200) . ' Mbps',
-                'download' => rand(100, 500) . ' Mbps',
-                'MaxRate' => $MaxRate
+                'upload' => $upload . ' Mbps',
+                'download' => $download . ' Mbps'
             ],
+            'max_bandwidth' => $MaxRate . ' Mbps',
             'health_score_trend' => [
                 'dates' => $health_score_trend['dates'],
                 'scores' => $health_score_trend['scores']
@@ -213,7 +245,43 @@ class Singlenwdata extends Backend
         }
     }
         
-
-    
-
+    /**
+     * 获取节点在线率
+     */
+    public function GetNodeonlineRate()
+    {
+        try {
+            $servername = $this->request->get('server_name');
+            $netname = $this->request->get('net_name');
+            
+            if (!$servername || !$netname) {
+                return json(['code' => 0, 'msg' => '参数不能为空']);
+            }
+            
+            // 获取在线节点数
+            $onlineNodes = Db::table('fa_node')
+                ->where('server_name', $servername)
+                ->where('net_name', $netname)
+                ->where('status', '连接正常')
+                ->count();
+            
+            // 获取总节点数
+            $totalNodes = Db::table('fa_node')
+                ->where('server_name', $servername)
+                ->where('net_name', $netname)
+                ->count();
+            
+            return json([
+                'code' => 1, 
+                'msg' => '获取成功',
+                'data' => [
+                    'onlinenode' => $onlineNodes,
+                    'cntnode' => $totalNodes
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            return json(['code' => 0, 'msg' => '获取节点在线率失败: ' . $e->getMessage()]);
+        }
+    }
 }
