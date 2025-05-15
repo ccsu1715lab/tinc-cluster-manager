@@ -28,6 +28,7 @@ DROP TRIGGER IF EXISTS `tr_net_status_offline`;
 DROP TRIGGER IF EXISTS `tr_net_status_offline_update_downtime`;
 DROP TRIGGER IF EXISTS `del`;
 DROP TRIGGER IF EXISTS `infobackup`;
+DROP TRIGGER IF EXISTS `network_status_change_trigger`;
 
 /* 删除所有视图 */
 DROP VIEW IF EXISTS `fa_netinserver`;
@@ -52,6 +53,7 @@ DROP TABLE IF EXISTS `fa_event`;
 DROP TABLE IF EXISTS `fa_log_operations`;
 DROP TABLE IF EXISTS `fa_node_online_rate`;
 DROP TABLE IF EXISTS `fa_netinserver`;
+DROP TABLE IF EXISTS `fa_network_status_log`;
 
 /* 创建所有表 */
 
@@ -277,28 +279,16 @@ CREATE TABLE IF NOT EXISTS `fa_node_ping_log` (
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='节点Ping记录表';
 
-/* 创建 fa_node_packet_loss 表 */
-CREATE TABLE IF NOT EXISTS `fa_node_packet_loss` (
+CREATE TABLE IF NOT EXISTS `fa_network_status_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `node_id` int(11) NOT NULL COMMENT '节点ID',
-  `loss_rate` float NOT NULL COMMENT '丢包率(0-1)',
-  `create_time` datetime NOT NULL COMMENT '创建时间',
+  `server_name` varchar(255) NOT NULL COMMENT '服务器名称',
+  `net_name` varchar(255) NOT NULL COMMENT '网络名称',
+  `status` varchar(20) NOT NULL COMMENT '状态(在线/离线)',
+  `change_time` datetime NOT NULL COMMENT '状态变化时间',
   PRIMARY KEY (`id`),
-  KEY `idx_node_id` (`node_id`),
-  KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='节点丢包率记录表';
-
-/* 创建 fa_node_traffic 表 */
-CREATE TABLE IF NOT EXISTS `fa_node_traffic` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `node_id` int(11) NOT NULL COMMENT '节点ID',
-  `upload` bigint(20) NOT NULL DEFAULT '0' COMMENT '上传流量(bytes)',
-  `download` bigint(20) NOT NULL DEFAULT '0' COMMENT '下载流量(bytes)',
-  `create_time` datetime NOT NULL COMMENT '创建时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_node_id` (`node_id`),
-  KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='节点流量记录表';
+  KEY `idx_server_net` (`server_name`, `net_name`),
+  KEY `idx_change_time` (`change_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='网络状态变化日志表';
 
 
 /* 创建触发器 */
@@ -394,6 +384,17 @@ BEGIN
         AND `recovery_time` IS NULL
         ORDER BY `id` DESC
         LIMIT 1;
+    END IF;
+END$$
+
+DELIMITER $$
+CREATE TRIGGER network_status_change_trigger
+AFTER UPDATE ON fa_net
+FOR EACH ROW
+BEGIN
+    IF OLD.status != NEW.status THEN
+        INSERT INTO fa_network_status_log (server_name, net_name, status, change_time)
+        VALUES (NEW.server_name, NEW.net_name, NEW.status, NOW());
     END IF;
 END$$
 

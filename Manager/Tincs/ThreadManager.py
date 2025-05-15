@@ -14,8 +14,14 @@ class ThreadManager:
     
     ##生成线程
     def assign_thread(self,network_name):
-        print("---生成线程---")
         print(f"正在为{network_name}分配线程")
+        ##获取栈顶线程
+        top_thread=self.thread_list[-1]
+        if top_thread.get_tincs_cnt()<self.Max_tincs_cnt:
+            top_thread.add_tincs(network_name)
+        else:
+            new_thread=Thread(network_name)
+            self.thread_list.append(new_thread)
     ##删除线程
     def delete_thread(self,thread_id):
         print("---删除线程---")

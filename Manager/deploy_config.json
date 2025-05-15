@@ -1,0 +1,18 @@
+{
+    "server": {
+        "ip": "",
+        "ssh_port": 22,
+        "ssh_user": "",
+        "web_root": "/var/www/html/manager"
+    },
+    "database": {
+        "name": "manager",
+        "user": "manager",
+        "password": ""
+    },
+    "requirements": {
+        "php_version": "7.4",
+        "apache_modules": ["mod_rewrite"],
+        "php_extensions": ["mysqli", "curl", "json"]
+    }
+} 

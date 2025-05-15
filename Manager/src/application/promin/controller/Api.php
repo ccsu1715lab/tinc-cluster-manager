@@ -4,6 +4,7 @@ use think\Db;
 use app\common\controller\Backend;
 use app\admin\library\tincui\Auxi;
 use app\admin\library\tincui\Arrangetincbynetsocket;
+use app\admin\controller\tincui\WebSocketController;
 use think\db\Expression;
 use think\Exception;
 /**
@@ -44,6 +45,12 @@ class Api extends Backend
     $this->lognodes = new \app\admin\model\tincui\Log_nodes;
     $this->netsadded=$this->netmodel->select();
     $this->log_operations_model = new \app\admin\model\tincui\Log_operations;
+}
+
+
+public function websocket_start(){
+    $websocketController = new WebSocketController();
+    $websocketController->start();
 }
 
 
@@ -362,30 +369,6 @@ public function updatenodeonlinestatus()
 }
 }
 
-   /* public function checkonline(){
-        $list = $this->nodemodel->select();
-            foreach ($list as $item) {
-                $current_time = date("Y-m-d H:i:s");
-                $item['current_time'] = $current_time;
-                $updatetime = $item['updatetime'];
-                $time_difference = strtotime($current_time) - strtotime($updatetime);
-                $username = $item['username'];
-                $sid=$item['sid'];
-                if ($time_difference > 5&&$item['status']=='已上线') {                
-                    $this->nodemodel->where('sid', $sid)->update(['status' => '已下线','downtime' => date("Y-m-d H:i")]);
-                    //添加日志
-                    $details="节点".$item['sid'].",位置：".$item['server_name'].'/'.$item['net_name']."。最近一次下线时间".date("Y-m-d H:i");
-                    $this->add_event('status',$details,'下线',$username);
-                }
-                else if($time_difference <=5&&$item['status']=='已下线') 
-                {
-                    $this->nodemodel->where('sid', $sid)->update(['status' => '已上线','uptime' => date("Y-m-d H:i")]);
-                    $details="节点".$item['sid'].",位置：".$item['server_name'].'/'.$item['net_name']."。最近一次上线时间".date("Y-m-d H:i");
-                    $this->add_event('status',$details,'上线',$username);
-                }
-    
-            }
-    }*/
 
     //接入服务器连接状态判断接口
     public function measure_serverconn()
@@ -520,6 +503,7 @@ public function updatenodeonlinestatus()
         //部署接入服务器
         $reponse=$this->ArrangeTinc->NodeCreate($server_ip,$net_name,$node_name,$config_info);
     }
+
 
 
     

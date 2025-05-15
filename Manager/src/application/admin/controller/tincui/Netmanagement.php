@@ -4,14 +4,13 @@ use think\Db;
 use app\admin\library\Auth;
 use app\common\controller\Backend;
 use app\admin\library\tincui\Auxi;
-use app\admin\library\tincui\AccessServer;
+use app\admin\library\tincui\Tincs;
 /**
  * 控制器名：NetManagement
  * 功能：对内网数据的管理，包括增删改查
 */
 class Netmanagement extends Backend
 {
-    private $user_flag=null; //fastadmin用户的唯一表示符
     private $username=null; //用户名
     private $netmodel=null;
     private $nodemodel=null;
@@ -20,7 +19,6 @@ class Netmanagement extends Backend
     private $servers_added=null;//已添加的服务器集群
     private $servertable='fa_server';//服务器表名
     private $auxi = null;
-    private $accessserver = null;
     private $this_log_type_add = "内网添加";
     private $this_log_type_del = "删除内网";
     private $log_operation_record = array(
@@ -30,7 +28,9 @@ class Netmanagement extends Backend
         "details" => "",
         "occurrence_time" => ""
     );
-    
+    protected $noNeedRight = [
+        'index','add','del','check','desc'
+    ];
    
 
     public function __construct()
@@ -40,13 +40,11 @@ class Netmanagement extends Backend
         //用户基本信息
         $auth=Auth::instance();
         $this->username=$auth->username;
-        $this->user_flag = $auth->username;
         //实例化模型
         $this->netmodel=model($this->netmodelpath);
         $this->nodemodel=model($this->nodemodelpath);
         //实例化辅助功能接口
         $this->auxi=new Auxi();
-        $this->accessserver = new AccessServer();
         //初始化操作日志、
         $this->log_operation_record["username"] = $this->username;
 
@@ -63,7 +61,7 @@ class Netmanagement extends Backend
         {
         [$where, $sort, $order, $offset, $limit] = $this->buildparams();
         $list = $this->netmodel
-        ->where($where)->where('user_flag',$this->user_flag)
+        ->where($where)->where('username',$this->username)
         ->order($sort, $order)
         ->paginate($limit);
          $result = ['total' => $list->total(), 'rows' => $list->items()];
@@ -101,8 +99,7 @@ class Netmanagement extends Backend
              $params['server_ip']=$this->auxi->GetServeripByServername($params['server_name']);
              $params['port']=intval($params['port']);
              $params['node_cnt']=0;
-             $params['user_flag']=$this->user_flag;
-             $params['status']="正常运行中";
+             $params['status']="在线";
              $params['username']=$this->username;
              $params['esbtime']=date('Y-m-d H:i:s');
 
@@ -138,85 +135,25 @@ class Netmanagement extends Backend
              //向接入服务器发送请求生成服务
              else
              {
-                   $response = null;
-                   $response = $this->accessserver->generate_server($params['server_ip'],$params['net_name'],$params['net_segment'],$params['port']);
-                   //初始化日志模板
-                   $log = $this->log_operation_record;
-                   $log["type"] = $this->this_log_type_add;
-                   $log["occurrence_time"] = $params['esbtime'];
-             if($response == null)
-             {
-                $error_message = "error in generate_server：params cannot be null!";
-                //初始化操作日志数据模板
-                $log["result"] = "失败";
-                $log["details"] = $error_message;           
-                $this->auxi->log_operation($log);
-                $this->error("fail to create net ".$params['net_name']." in ".$params['server_ip']);
-             }
-
-             
-
-             $response = json_decode($response);
-             $NetConfiginfo = $response->config;
-             //如果服务生成失败
-             if($response->info=="Failure")
-             {
-                $error_message = "error in generate_server：".$response->details;
-                //初始化操作日志数据模板
-                $log["result"] = "失败";
-                $log["details"] = $error_message;
-                $this->auxi->log_operation($log);
-                $this->error($error_message);
-             }
-             else
-             {
-                if($NetConfiginfo==null)
-                $this->error('ACCESSSERVER ERROR:NetConfiginfo is null !');
-                //将内网信息存入数据库
-                if($this->insert_net($params)==true)
-                {
-                    //生成在线节点信息
-                    $this->auxi->insert_nodeonlinedatainnet($params['server_name'],$params['net_name']);
-                    //占用端口,网段
-                    $temp_port=$this->auxi->occupyport($params['server_name'],$params['net_name'],$params['port']);
-                    $temp_seg=$this->auxi->occupyseg($params['server_name'],$params['net_name'],$params['net_segment']);
-                    //将数据库配置信息写入数据库
-                    $temp_config_result = $this->auxi->save_netconfiginfo($params['server_name'],$params['net_name'],$NetConfiginfo);
-                    if($temp_port==true&&$temp_seg==true&&$temp_config_result!=0)
-                    {
-                        $success_message = $params['server_name'].'/'.$params['net_name']."创建成功，对应服务已生成";
-                        //初始化操作日志数据模板
-                        $log["result"] = "成功";
-                        $log["details"] = $success_message;
-                        $this->auxi->log_operation($log);
-                        $this->success($success_message);
-                    }
+                $Tincs=new Tincs($params['server_name'],$params['net_name'],$params['server_ip'],$params['net_segment'],
+                $params['port'],$params['username'],$params['desc']);
+                $response = $Tincs->GenerateTincs();
+                $response = json_decode($response);
+                if($response->code==0){
+                $result=json_decode($response->response);
+                $Tincs->SetConfig($result->config);
+                $Tincs->SaveInfo();
+                $this->auxi->occupyport($params['server_name'],$params['net_name'],$params['port']);
+                $this->auxi->occupyseg($params['server_name'],$params['net_name'],$params['net_segment']);
+                $this->success();
+                }else{
+                $this->error($response->response);
                 }
-                else
-                {
-                    //删除服务
-                    $temp_netdelete=array();
-                    $temp_netdelete[] = $params['net_name'];
-                    $temp=$this->auxi->delete_server($params['server_ip'],$temp_netdelete);
-                    $error_message = "error in netmanagement:insert error!";
-                    //初始化操作日志数据模板
-                    $log["result"] = "失败";
-                    $log["details"] = $error_message;
-                    $this->auxi->log_operation($log);
-                    $this->error($error_message);
+            }
                     
-                }
-             }
-             }
-          
-
-
-        }
-        else
-        {
-            return "非法请求，警告！";
-        }
+                  
     }
+}
         
 
     /**
@@ -251,118 +188,27 @@ class Netmanagement extends Backend
             }
             else
             {
-                $tempnetinfo="";//删除内网信息
-                $tempportinfo="";//释放端口信息
                 $netnamestodelete=array();//删除内网数据
                 $serverip=$list[0]['server_ip'];
-                $servername=$list[0]['server_name'];
                 foreach ($list as $item) 
                 {
                     $netnamestodelete[]=$item['net_name'];
-                    $tempnetinfo.=$item['net_name'];
-                    $tempnetinfo.=" ";
-                    $tempportinfo.=$item['port'];
-                    $tempportinfo.=" ";
                 }
-                //初始化日志模板
-                $log = $this->log_operation_record;
-                $log["type"] = $this->this_log_type_del;
-                $log["occurrence_time"] = date('Y-m-d H:i:s');
-                
-
                 //删除服务
-                $response=$this->accessserver->delete_server($serverip,$netnamestodelete);
-                if($response==null)
-                {
-                    $error_message = "error in delete_server：params cannot be null!";
-                    //初始化操作日志数据模板
-                    $log["result"] = "失败";
-                    $log["details"] = $error_message;                
-                    $this->auxi->log_operation($log);
-                    $this->error($error_message);
+                $response=Tincs::DeleteTincs($serverip,$netnamestodelete);
+                $res=json_decode($response);
+                if($res->code==0){
+                    Tincs::DeleteInfo($list);
+                    $this->success("删除成功");
+                }else{
+                    $this->error($res->response);
                 }
-                else
-                {
-                    $response = json_decode($response);
-                    $info = $response->info;
-                    if($info=="Success")
-                    {
-                        //删除数据库数据
-                        $count = 0;
-                        Db::startTrans();
-                        try {
-                            foreach ($list as $item) 
-                            {   
-                                $this->auxi->DelAllNodeInNet($item['server_name'],$item['net_name']);
-                                $this->auxi->del_nodeonlinedatainnet($item['server_name'],$item['net_name']);
-                                $this->auxi->realiseport($item['server_name'],$item['port']);
-                                $this->auxi->realisesegment($item['server_name'],$item['net_segment']);
-                                $count += $item->delete();
-     
-                            }
-                            Db::commit();
-                        } catch (PDOException|Exception $e) {
-                            Db::rollback();
-                            $this->error($e->getMessage());
-                        }
-                        if($count!=0)
-                        {
-                            //日志  
-                            $success_message = "删除成功：服务器".$servername."/".$tempnetinfo."已被删除"." 端口".$tempportinfo."已被释放";
-                            //初始化操作日志数据模板
-                            $log["result"] = "成功";
-                            $log["details"] = $success_message;
-                            $this->auxi->log_operation($log);
-                            $this->success($success_message);
-                        }
-                        else
-                        {
-                            //日志
-                            $error_message = "error in netmanagement：servers in ACCESSSERVER have been deleted,but no rows are deleted";
-                            //初始化操作日志数据模板
-                            $log["result"] = "成功";
-                            $log["details"] = $error_message;
-                            $this->auxi->log_operation($log);
-                            $this->error($error_message);
-                        }
-                    }
-                    else if($info=="Failed")
-                    {
-                        //日志
-                        $error_message = "error in ACCESSSERVER：Failed to del";
-                        //初始化操作日志数据模板
-                        $log["result"] = "成功";
-                        $log["details"] = $error_message;
-                        $this->auxi->log_operation($log);
-                        $this->error($error_message);
-                    }
-                    else
-                    {    
-                        //日志
-                        $error_message = "error in ACCESSSERVR：System error";
-                        //初始化操作日志数据模板
-                        $log["result"] = "成功";
-                        $log["details"] = $error_message;
-                        $this->auxi->log_operation($log);                                            
-                        $this->error($error_message);
-                    }
-
-
-                }
-
-
-
             }
-
-
         }
-        else
-        {
-            return "警告，非法请求！";
-        }
+ }
+    
 
 
-    }
     
 
 

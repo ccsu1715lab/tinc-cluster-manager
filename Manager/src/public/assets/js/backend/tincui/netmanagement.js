@@ -38,7 +38,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
                         {field: 'net_segment',title: '网段'},
                         {field: 'node_cnt',title: '节点数量'},
                         {field: 'status',title: '内网状态'},
-                        {field: 'config_state',title: '配置情况'},
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate,
                                                          buttons:[
                                                            {
@@ -102,9 +101,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
             }*/
         },
         add: function(){           
-                 
-
-
             //根据接入服务器来获取内网和端口
             function GetNetsegmentPortByServername()
             {

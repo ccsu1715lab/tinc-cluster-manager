@@ -2,11 +2,9 @@
 namespace app\admin\controller\tincui;
 use think\Db;
 use app\admin\library\tincui\Auxi;
-use app\admin\library\tincui\AccessServer;
 use app\admin\library\Auth;
 use app\common\controller\Backend;
-
-
+use app\admin\library\tincui\Tincc;
 /**
  * 类名：Nodemanagement
  * 功能：主要涉及节点的管理，包括增删改查
@@ -18,10 +16,8 @@ class Nodemanagement extends Backend
     private $nodemodel_path = "app\admin\model\\tincui\Node";
     private $netmodel_path = "app\admin\model\\tincui\Net";
     private $username = null;
-    private $user_flag = null;
     private $servers_added = null;
     private $auxi = null;
-    private $accessserver = null;
     private $servertable = "fa_server";
     private $this_log_type_add = "添加节点";
     private $this_log_type_del = "删除节点";
@@ -33,6 +29,9 @@ class Nodemanagement extends Backend
         "details" => "",
         "occurrence_time" => ""
     );
+    protected $noNeedRight = [
+        'index','add','del','edit','desc'
+    ];
 
     public function __construct()
     {
@@ -45,11 +44,9 @@ class Nodemanagement extends Backend
         
         $auth = Auth::instance();
         $this->username = $auth->username;
-        $this->user_flag = $auth->username;
         $this->log_operation_record['username']=$this->username;
         //初始化接口类
         $this->auxi = new Auxi();
-        $this->accessserver = new AccessServer();
 
     }
 
@@ -59,7 +56,7 @@ class Nodemanagement extends Backend
         if($this->request->isAjax())
         {
         [$where, $sort, $order, $offset, $limit] = $this->buildparams();
-        $list = $this->nodemodel->where($where)->where('user_flag',$this->user_flag)->order($sort, $order)->paginate($limit);
+        $list = $this->nodemodel->where($where)->where('username',$this->username)->order($sort, $order)->paginate($limit);
         $result = ['total' => $list->total(), 'rows' => $list->items()];
         return json($result);
         }
@@ -80,6 +77,7 @@ class Nodemanagement extends Backend
         //如果是post请求，则对数据进行处理并添加
         else if($this->request->isPost())
         {
+            try{
             $params = $this->request->post('row/a');
             if(empty($params))
             {
@@ -122,52 +120,22 @@ class Nodemanagement extends Backend
             {
                 $this->error("this ip is not ip under Net you selected "."segment：".$netsegment." ip：".$params['node_ip']);
             }
-
-
-            
             
             //数据的补充
-            $params['sid']=$this->auxi->generateRandomString(10);
+            $params['sid']=\fast\Random::uuid();
             $params['server_ip']=$this->auxi->GetServeripByServername($params['server_name']);
-            $params['user_flag']=$this->user_flag;
             $params['username']=$this->username;
-            $params['token']=\fast\Random::uuid();
             $params['esbtime']=date('Y-m-d H:i:s');
             $params['updatetime']=$params['esbtime'];
-            //初始化日志模板
-            $log = $this->log_operation_record;
-            $log["type"] = $this->this_log_type_add;
-            $log["occurrence_time"] = $params['esbtime'];
-           // $log["Object"] = "PublicServer：".$params['server_name'].";"."UnderNet：".$params['net_name']."Node：".$params["node_name"];
-                
-            //插入数据库
-            if(($this->insert_node($params))==true)
-            {
-                if(($this->auxi->changenodecntinnet($params['server_name'],$params['net_name'],1))==true)
-                {
-                    //添加日志
-                    $success_message = "添加成功，请使用设备id和密码在客户端配置，配置成功后节点则会上线";
-                    //初始化操作日志数据模板         
-                    $log["result"] = "成功";
-                    $log["details"] = $success_message;                
-                    $this->auxi->log_operation($log);
-                    $this->success($success_message);
-                }
-
+            $params['status']="断开连接";
+            $params['config_state']="等待配置";
+            $Tincc = new Tincc($params['sid'],$params['password'],$params['server_name'],$params['server_ip'],$params['node_ip'],$params['net_name'],$params['node_name'],$params['username'],$params['status'],$params['updatetime'],$params['desc'],$params['config_state'],$params['esbtime']);
+            $Tincc->SaveInfo();
+            $this->success("添加成功"); 
+            }         
+            catch(Exception $e){
+            $this->error($e->getMessage());
             }
-            else
-            {
-                //添加日志
-                $error_message = "error in nodemanagement/add：fail to add node";
-                //初始化操作日志数据模板
-                $log["result"] = "失败";
-                $log["details"] = $error_message;
-                $this->auxi->log_operation($log);
-                $this->error($error_message);
-
-            }
-
-
 
         }
 
@@ -182,6 +150,7 @@ class Nodemanagement extends Backend
         }
         else
         {
+            try{
             $ids = $ids ?: $this->request->post('ids');
             if(empty($ids))
             {
@@ -193,76 +162,27 @@ class Nodemanagement extends Backend
                 $this->nodemodel->where($this->dataLimitField, 'in', $adminIds);
             }
             $list = $this->nodemodel->where($pk,'in',$ids)->select();
-            $count = 0;
             if($this->auxi->IsSameNodeInNet($list)==false)
             {
                 $this->error("暂不支持同时删除不同内网下的节点");
             }
-            //初始化要删除的数据和日志
-            $delnodes_info="";//节点删除信息
-            $nodes_del_data = array();//要删除的节点数据
-            $servername = $list[0]['server_name'];
-            $netname = $list[0]['net_name'];
-            $serverip = $list[0]['server_ip'];
-            foreach ($list as $item) {
-                $sid=$item['sid'];
-                $nodename=Db::table('fa_node_backup')->where('sid',$sid)->value('node_name');
-                $nodes_del_data[]=$nodename;
-                $delnodes_info.=$nodename;
-                $delnodes_info.="、";
+            //构造将删除节点的数组
+            $del_node_list = array();
+            foreach($list as $item){
+                $del_node_list[] = $item['node_name'];
             }
-            //初始化日志模板
-            $log = $this->log_operation_record;
-            $log["type"] = $this->this_log_type_del;
-            $log["occurrence_time"] = date('Y-m-d H:i:s');
-            //$log["Object"] = "PublicServer：".$servername.";"."UnderNet：".$netname.";"."Node：".$delnodes_info;
-            //输出接入服务器上的数据
-            $response = $this->accessserver->delnodeinserver($serverip,$netname,$nodes_del_data);
-            if($response==null)
-            {
-                //数据验证
-                $this->error("error in nodemanagement：params cannot be null");
-            }
-            else
-            {
-                //解析json数据
-                $response = json_decode($response);
-                $info = $response->info;
-                $count;
-                 //删除数据
-                 $count=$this->auxi->del_node($list);
-                 if ($count!=0)
-                 {                     
-                    $this->auxi->changenodecntinnet($servername,$netname,-$count);
-                     //添加日志
-                     if($info=="Success")
-                     {
-                        $success_message = "节点".$servername."/".$netname."/".$delnodes_info."已被删除";
-                        //初始化操作日志数据模板 
-                        $log["result"] = "成功";
-                        $log["details"] = $success_message;
-                        $this->auxi->log_operation($log);
-                        $this->success($success_message);
-                     }
-                     else if($info == "Failed")
-                     {
-                        $error_message = "Del successfully expect an error in ACCESSSERVER：".$response->details;
-                        //初始化操作日志数据模板
-                        $log["result"] = "成功";
-                        $log["details"] = $error_message;
-                        $this->auxi->log_operation($log);
-                        $this->error($error_message);
-
-                     }
-                 
-                 }
-            }
+            Tincc::DelInfo($ids);
+            $result=json_decode(Tincc::DelTincc($list[0]['server_ip'],$list[0]['net_name'],$del_node_list));
+            $this->success($result->response);
+         }
+         catch(Exception $e){
+            $this->error($e->getMessage());
+         }
+     }
+    }
 
 
             
-        }
-
-    }
 
     public function edit($ids = null)
     {            

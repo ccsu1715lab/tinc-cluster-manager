@@ -33,6 +33,15 @@ class Auxi{
      return true;     
    }
 
+   public function save_netinfo($params){
+    if($params==null)
+    {
+        return false;
+    }
+    $this->netmodel->insert($params);
+    return true;
+   }
+
        /**
      * 控制器名：IsPortRepeat
      * 功能：判断端口是否已被占用

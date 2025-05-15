@@ -231,22 +231,6 @@ public function checkhouronline()
         }
     }
 
-    public function checkonline(){
-        $list = $this->model->select();
-            foreach ($list as $item) {
-                $current_time = date("Y-m-d H:i:s");
-                $item['current_time'] = $current_time;
-                $updatetime = $item['updatetime'];
-                $time_difference = strtotime($current_time) - strtotime($updatetime);
-                $node_name = $item['node_name'];
-                if ($time_difference > 5) {
-                    $this->lognodes->where('node_name', $node_name)->update(['type' => '离线']);
-                } else {
-                    $this->lognodes->where('node_name', $node_name)->update(['type' => '在线']);
-                }
-                $this->lognodes->where('node_name', $node_name)->update(['occurrence_time' => $current_time]);
-            }
-    }
 
     public function keepalive()
     {

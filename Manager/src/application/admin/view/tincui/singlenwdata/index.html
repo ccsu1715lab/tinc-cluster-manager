@@ -107,6 +107,113 @@
             margin-top: 20px;
             text-align: center;
         }
+        .ping-test-btn {
+            float: right;
+            margin-top: -5px;
+            transition: all 0.3s ease;
+        }
+        .ping-test-btn:hover {
+            transform: scale(1.05);
+        }
+        .ping-test-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .update-time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+        .update-time .time {
+            color: #2196f3;
+            font-weight: 500;
+        }
+        .panel-heading {
+            position: relative;
+            padding: 15px;
+        }
+        .panel-title {
+            display: inline-block;
+            margin: 0;
+        }
+        .dashboard-value {
+            margin-bottom: 5px;
+        }
+        .traffic-info {
+            margin-bottom: 5px;
+        }
+        .response-time-container,
+        .health-score-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .response-time-value,
+        .health-score-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .dashboard-value {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .update-time {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .traffic-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .traffic-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .traffic-details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        
+        .traffic-info {
+            text-align: center;
+        }
+        
+        .recovery-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .recovery-value {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        #recovery-trend-chart {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -162,10 +269,18 @@
                         <div class="panel panel-default dashboard-card">
                             <div class="panel-heading">
                                 <h3 class="panel-title">平均响应时间</h3>
+                                <button class="btn btn-sm btn-primary ping-test-btn" data-type="response">
+                                    <i class="fa fa-refresh"></i> Ping测试
+                                </button>
                             </div>
                             <div class="panel-body">
-                                <span id="avg-response-time" class="dashboard-value">--</span>
-                                <small>毫秒</small>
+                                <div class="response-time-container">
+                                    <div id="response-time-chart" style="width: 120px; height: 120px;"></div>
+                                    <div class="response-time-value">
+                                        <span id="avg-response-time" class="dashboard-value">--</span>
+                                    </div>
+                                </div>
+                                <div class="update-time">上次更新: <span class="time">--</span></div>
                             </div>
                         </div>
                     </div>
@@ -173,11 +288,19 @@
                     <div class="col-md-3">
                         <div class="panel panel-default dashboard-card">
                             <div class="panel-heading">
-                                <h3 class="panel-title">健康评分</h3>
+                                <h3 class="panel-title">健康分数</h3>
+                                <button class="btn btn-sm btn-primary ping-test-btn" data-type="health">
+                                    <i class="fa fa-refresh"></i> 测试
+                                </button>
                             </div>
                             <div class="panel-body">
-                                <span id="health-score" class="dashboard-value">--</span>
-                                <small>/100</small>
+                                <div class="health-score-container">
+                                    <div id="health-score-chart" style="width: 120px; height: 120px;"></div>
+                                    <div class="health-score-value">
+                                        <span id="health-score" class="dashboard-value">--</span>
+                                    </div>
+                                </div>
+                                <div class="update-time">上次更新: <span class="time">--</span></div>
                             </div>
                         </div>
                     </div>
@@ -186,18 +309,90 @@
                         <div class="panel panel-default dashboard-card">
                             <div class="panel-heading">
                                 <h3 class="panel-title">流量</h3>
+                                <button class="btn btn-sm btn-primary ping-test-btn" data-type="traffic">
+                                    <i class="fa fa-refresh"></i> 更新
+                                </button>
                             </div>
                             <div class="panel-body">
-                                <div class="traffic-info">
-                                    <div>
-                                        <span class="traffic-label upload">上传:</span>
-                                        <span id="upload-speed" class="traffic-value">--</span>
+                                <div class="traffic-container">
+                                    <div class="upload-info">
+                                        <div class="traffic-item upload">
+                                            <i class="fa fa-arrow-up"></i>
+                                            <span id="upload-speed">--</span>
+                                        </div>
+                                        <small>上传</small>
                                     </div>
-                                    <div>
-                                        <span class="traffic-label download">下载:</span>
-                                        <span id="download-speed" class="traffic-value">--</span>
+                                    
+                                    <div id="traffic-chart" style="width: 120px; height: 120px;"></div>
+                                    
+                                    <div class="download-info">
+                                        <div class="traffic-item download">
+                                            <i class="fa fa-arrow-down"></i>
+                                            <span id="download-speed">--</span>
+                                        </div>
+                                        <small>下载</small>
                                     </div>
                                 </div>
+                                
+                                <style>
+                                /* 新增流量卡片样式 */
+                                .traffic-container {
+                                    position: relative;
+                                    height: 120px;
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                }
+                                
+                                .traffic-stats {
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 15px;
+                                    width: 100%;
+                                    padding: 0 20px;
+                                    margin-top: 10px;
+                                }
+                                
+                                .traffic-stat {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    padding: 6px;
+                                    background: #f8f9fa;
+                                    border-radius: 8px;
+                                }
+                                
+                                .traffic-stat i {
+                                    font-size: 14px;
+                                    margin-bottom: 2px;
+                                }
+                                
+                                .traffic-stat.upload {
+                                    color: #67C23A;
+                                }
+                                
+                                .traffic-stat.download {
+                                    color: #409EFF;
+                                }
+                                </style>
+                                
+                                <div class="traffic-container">
+                                    <!-- 圆环图表容器 -->
+                                    <div id="traffic-chart" style="width: 120px; height: 120px;"></div>
+                                    
+                                    <!-- 统计信息 -->
+                                    <div class="traffic-stats">
+                                        <div class="traffic-stat upload">
+                                            <i class="fa fa-arrow-up"></i>
+                                            <span id="upload-speed">--</span>
+                                        </div>
+                                        <div class="traffic-stat download">
+                                            <i class="fa fa-arrow-down"></i>
+                                            <span id="download-speed">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="update-time">上次更新: <span class="time">--</span></div>
                             </div>
                         </div>
                     </div>
@@ -208,8 +403,14 @@
                                 <h3 class="panel-title">平均恢复时间</h3>
                             </div>
                             <div class="panel-body">
-                                <span id="avg-recovery-time" class="dashboard-value">--</span>
-                                <small>分钟</small>
+                                <div class="recovery-container">
+                                    <div class="recovery-value">
+                                        <span id="avg-recovery-time" class="dashboard-value">--</span>
+                                        <small>分钟</small>
+                                    </div>
+                                    <div id="recovery-trend-chart" style="width: 100%; height: 100px;"></div>
+                                </div>
+                                <div class="update-time">上次更新: <span class="time">--</span></div>
                             </div>
                         </div>
                     </div>
@@ -223,7 +424,7 @@
                                 <h3 class="panel-title">健康评分趋势 (近7天)</h3>
                             </div>
                             <div class="panel-body">
-                                <div id="health-score-chart" style="height: 400px;"></div>
+                                <div id="health-score-trend-chart" style="height: 400px;"></div>
                             </div>
                         </div>
                     </div>

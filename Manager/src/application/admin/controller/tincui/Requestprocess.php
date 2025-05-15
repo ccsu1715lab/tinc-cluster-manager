@@ -11,7 +11,7 @@ use think\Db;
 class Requestprocess extends Backend{
     private $netmodel = null;
     private $nodemodel = null;
-    protected $user_flag = null;
+    protected $username = null;
     private $table_event = "fa_event";
     private $table_nodeonline = "fa_nodeonline";
     public function __construct()
@@ -22,7 +22,7 @@ class Requestprocess extends Backend{
         $this->netmodel = model("app\admin\model\\tincui\Net");
         $this->nodemodel = model("app\admin\model\\tincui\Node");
         $auth = Auth::instance();
-        $this->user_flag = $auth->username; 
+        $this->username = $auth->username; 
     }
     /**
      * 控制器名：IsNetRepeat
@@ -137,7 +137,7 @@ class Requestprocess extends Backend{
     {
         $servername=$this->request->post('servername');
         if($servername == null)return null;
-        $seg=$this->netmodel->where('server_name',$servername)->where('user_flag',$this->user_flag)->column('net_name');
+        $seg=$this->netmodel->where('server_name',$servername)->where('username',$this->username)->column('net_name');
         return $seg;
     }
   }
@@ -266,7 +266,7 @@ class Requestprocess extends Backend{
   {
     if($this->request->isPost())
     {
-        $events=Db::table($this->table_event)->where('ifqueried',"no")->where('username',$this->user_flag)->select();
+        $events=Db::table($this->table_event)->where('ifqueried',"no")->where('username',$this->username)->select();
         //将已查询的事件标记为已查询
         if($events!=null)
         {
@@ -325,7 +325,7 @@ class Requestprocess extends Backend{
   {
     $hour = date("H");
     $hour = intval($hour);
-    $list = $this->netmodel->where('user_flag',$this->user_flag)->select();//遍历所有内网
+    $list = $this->netmodel->where('username',$this->username)->select();//遍历所有内网
     if (count($list) == 0) return "暂无内网数据";
     else
     {

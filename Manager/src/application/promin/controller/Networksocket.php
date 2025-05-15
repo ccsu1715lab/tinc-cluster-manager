@@ -25,6 +25,7 @@ class Networksocket extends Backend
     protected $Response = NULL;
     // 守护进程所在服务器IP
     protected $serverIP = NULL;
+    protected $timeout = 5 // 默认超时时间为30秒
 
     // 构造函数
     public function __construct()
@@ -34,7 +35,7 @@ class Networksocket extends Backend
             // 初始化套接字
             $this->Socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
             if ($this->Socket === false)
-                throw new Exception("Creating socket encounter an error!");
+                throw new Exception("创建套接字失败");
 
             // 初始化端口号
             $this->Port = 55555;
@@ -56,18 +57,24 @@ class Networksocket extends Backend
             $this->JsonArray = [];
 
             // 初始化响应
-            $this -> Response = '';
+            $this->Response = '';
 
         }
         catch (Exception $e)
         {
             // 记录错误日志,
             error_log($e->getMessage(), 3, "error.log");
-
-            // 返回错误消息，并终止脚本运行
-            exit("There was an error processing your request. Please try again later.\n");
+            throw new Exception("初始化套接字失败: " . $e->getMessage());
         }
 
+    }
+
+    public function setTimeout($timeout)
+    {
+        $this->timeout = $timeout;
+        // 设置套接字超时
+        socket_set_option($this->Socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => $timeout, 'usec' => 0));
+        socket_set_option($this->Socket, SOL_SOCKET, SO_SNDTIMEO, array('sec' => $timeout, 'usec' => 0));
     }
 
     /**
@@ -78,39 +85,48 @@ class Networksocket extends Backend
      */
     public function Net_Create($server_ip,$netName,$geteway,$port)
     {
-        // 接收变量，写入对应属性
-               $this -> serverIP = $server_ip;
+        try
+        {
+            // 接收变量，写入对应属性
+            $this->serverIP = $server_ip;
 
-                // 使用模板创建一个空白的json数据
-                $json = $this -> Template;
+            // 使用模板创建一个空白的json数据
+            $json = $this->Template;
 
-                // 设置JSON数据中对应的字段值
-                $json["Object"] = "Net";
-                $json["Operation"] = "Create";
-                $json["Name"] = $netName;
-                $json["IP"] = $geteway.".1";
-                $json["Geteway"] = $geteway;
-                $json["Port"] = $port;
+            // 设置JSON数据中对应的字段值
+            $json["Object"] = "Net";
+            $json["Operation"] = "Create";
+            $json["Name"] = $netName;
+            $json["IP"] = $geteway.".1";
+            $json["Geteway"] = $geteway;
+            $json["Port"] = $port;
 
-                // 调试代码
-                // echo $netName;
-                // echo $ip;
-                // echo $geteway;
-                // var_dump($port);
+            // 调试代码
+            // echo $netName;
+            // echo $ip;
+            // echo $geteway;
+            // var_dump($port);
 
-                // 添加json数据到json数组中
-                $this -> JsonArray[] = $json;
+            // 添加json数据到json数组中
+            $this->JsonArray[] = $json;
 
-                // 构造json数据
-                $js = json_encode($this -> JsonArray);
-                // 调试信息
-                // echo $js;
+            // 构造json数据
+            $js = json_encode($this->JsonArray);
+            // 调试信息
+            // echo $js;
 
-                $conn=$this -> socketCommunication($js);
+            $conn = $this->socketCommunication($js);
 
-                return $this -> Response;
- 
-       
+            if ($conn === false) {
+                throw new Exception("与服务器通信失败");
+            }
+
+            return $this->Response;
+        }
+        catch (Exception $e)
+        {
+            throw new Exception("创建内网失败: " . $e->getMessage());
+        }
     }
 
     /**
@@ -124,12 +140,12 @@ class Networksocket extends Backend
         try
         {
             // 接收参数，写入对应属性
-            $this -> serverIP = $server_ip;
+            $this->serverIP = $server_ip;
 
             if(is_array($netNamearray))
             {
                 // 使用模板创建一个空白的json数据
-                $json = $this -> Template;
+                $json = $this->Template;
 
                 // 从内网数组中取出内网名，构建对应的JSON数据
                 foreach($netNamearray as &$netName)
@@ -141,17 +157,17 @@ class Networksocket extends Backend
                     $json["Name"] = $netName;
 
                     // 添加json数据到json数组中
-                    $this -> JsonArray[] = $json;
+                    $this->JsonArray[] = $json;
                 }
 
                 // 构造JSON数据
-                $js = json_encode($this -> JsonArray);
+                $js = json_encode($this->JsonArray);
                 
                 // 套接字通讯
-                $this -> socketCommunication($js);
+                $this->socketCommunication($js);
 
                 // 处理响应数据
-                return $this -> Response;
+                return $this->Response;
             }
             else
             {
@@ -165,7 +181,7 @@ class Networksocket extends Backend
 
             echo "There have an error in Net_Delete!\n";
 
-            echo $e -> getMessage();
+            echo $e->getMessage();
         }
     }
 
@@ -180,10 +196,10 @@ class Networksocket extends Backend
         try
         {
             // 接收参数，写入对应属性
-            $this -> serverIP = $server_ip;
+            $this->serverIP = $server_ip;
             
             // 使用模板创建一个空白的JSON数据
-            $json = $this -> Template;
+            $json = $this->Template;
 
             // 设置JSON数据中对应的字段值
             $json["Object"] = "Node";
@@ -192,15 +208,15 @@ class Networksocket extends Backend
             $json["Internet"] = $netName;
             $json["content"] = $configFile;
             
-            $this -> JsonArray[] = $json;
+            $this->JsonArray[] = $json;
 
             // 构造JSON数据
-            $js = json_encode($this -> JsonArray);
+            $js = json_encode($this->JsonArray);
 
             // 发送数据
-            $this -> socketCommunication($js);
+            $this->socketCommunication($js);
 
-            return $this -> Response;
+            return $this->Response;
         }
         catch(Exception $e)
         {
@@ -209,11 +225,11 @@ class Networksocket extends Backend
 
             echo "There have an error in Node_Create!\n";
             
-            echo $e -> getMessage();
+            echo $e->getMessage();
         }
     }
 
-            /**
+    /**
      * 方法：surveyDaemonsSocketCommunication
      * 作用：负责与监测型守护进程进行套接字通讯
      * 参数：JSON数组
@@ -221,23 +237,23 @@ class Networksocket extends Backend
     public function surveyDaemonsSocketCommunication($server_IP,$json)
     {
 
-        // $js = json_encode($this -> JsonArray);
+        // $js = json_encode($this->JsonArray);
 
         // 建立连接 
-        socket_connect($this -> Socket,$server_IP,5555);
+        socket_connect($this->Socket,$server_IP,5555);
 
         // 发送请求
-        socket_write($this -> Socket,$json,strlen($json));
+        socket_write($this->Socket,$json,strlen($json));
 
         // 读取响应
-        $this -> Response = '';
-        while($buffer = @socket_read($this -> Socket,2048,PHP_NORMAL_READ))
+        $this->Response = '';
+        while($buffer = @socket_read($this->Socket,2048,PHP_NORMAL_READ))
         {
-            $this -> Response .= $buffer;
+            $this->Response .= $buffer;
         }
 
         // 关闭套接字
-        socket_close($this -> Socket);
+        socket_close($this->Socket);
 
     }
 
@@ -252,12 +268,12 @@ class Networksocket extends Backend
         try
         {
             // 接收参数，写入对应属性
-            $this -> serverIP = $server_ip;
+            $this->serverIP = $server_ip;
 
             if(is_array($nodeNameArray))
             {
                 // 使用模板创建一个空白的json数据
-                $json = $this -> Template;
+                $json = $this->Template;
 
                 // 从内网数组中取出内网名，构建对应的JSON数据
                 foreach($nodeNameArray as &$nodeName)
@@ -270,17 +286,17 @@ class Networksocket extends Backend
                     $json["Internet"] = $netName;
 
                     // 添加json数据到json数组中
-                    $this -> JsonArray[] = $json;
+                    $this->JsonArray[] = $json;
                 }
 
                 // 构造JSON数据
-                $js = json_encode($this -> JsonArray);
+                $js = json_encode($this->JsonArray);
                 
                 // 套接字通讯
-                $this -> socketCommunication($js);
+                $this->socketCommunication($js);
 
                 // 处理响应数据
-                return $this -> Response;
+                return $this->Response;
             }
             else
             {
@@ -294,7 +310,7 @@ class Networksocket extends Backend
 
             echo "There have an error in Net_Delete!\n";
 
-            echo $e -> getMessage();
+            echo $e->getMessage();
         }
     }
 
@@ -306,33 +322,56 @@ class Networksocket extends Backend
      */
     public function socketCommunication($jsonDateArray)
     {
-      
-        try{  
+        try {  
+            // 设置套接字超时
+            socket_set_option($this->Socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 5, 'usec' => 0));
+            socket_set_option($this->Socket, SOL_SOCKET, SO_SNDTIMEO, array('sec' => 5, 'usec' => 0));
+            
             // 建立连接
-            $conn_result=socket_connect($this -> Socket,$this -> serverIP,$this -> Port);
+            $conn_result = @socket_connect($this->Socket, $this->serverIP, $this->Port);
+            
+            // 检查连接结果
+            if ($conn_result === false) {
+                $error_code = socket_last_error($this->Socket);
+                $error_message = socket_strerror($error_code);
+                socket_close($this->Socket);
+                return json_encode(array('code'=>1, 'response'=>"连接服务器失败: " . $error_message));
+            }
+
             // 发送请求
-            socket_write($this -> Socket,$jsonDateArray,strlen($jsonDateArray));
+            $write_result = @socket_write($this->Socket, $jsonDateArray, strlen($jsonDateArray));
+            if ($write_result === false) {
+                $error_code = socket_last_error($this->Socket);
+                $error_message = socket_strerror($error_code);
+                socket_close($this->Socket);
+                return json_encode(array('code'=>1, 'response'=>"发送数据失败: " . $error_message));
+            }
 
             // 读取响应
-            $this -> Response = '';
-            while($buffer = @socket_read($this -> Socket,2048,PHP_NORMAL_READ))
-            {
-                $this -> Response .= $buffer;
+            $this->Response = '';
+            $start_time = time();
+            while($buffer = @socket_read($this->Socket, 2048, PHP_NORMAL_READ)) {
+                $this->Response .= $buffer;
+                // 检查是否超时
+                if (time() - $start_time > 5) {
+                    socket_close($this->Socket);
+                    return json_encode(array('code'=>1, 'response'=>"读取响应超时"));
+                }
             }
 
             // 关闭套接字
-            socket_close($this -> Socket);
+            socket_close($this->Socket);
+            return json_encode(array('code'=>0, 'response'=>"成功"));
 
-            // 格式化信息
-            // $this -> Response = json_encode($this -> Response);
-            // var_dump(json_decode($this -> Response));  
-
-        }catch(Exception $e)
-        {
-            return;
+        } catch(Exception $e) {
+            // 确保在发生异常时关闭socket
+            if ($this->Socket) {
+                socket_close($this->Socket);
+            }
+            // 记录错误日志
+            error_log($e->getMessage(), 3, "socket_error.log");
+            return json_encode(array('code'=>1, 'response'=>$e->getMessage()));
         }
-          
-
     }
 
 
@@ -354,7 +393,7 @@ class Networksocket extends Backend
         // $ip = "192.168.100.1";
         // $port = 656;
 
-        // $result = $this -> Net_Create($server_ip,$netName,$geteway,$ip,$port);
+        // $result = $this->Net_Create($server_ip,$netName,$geteway,$ip,$port);
         // echo "<br>";
         // var_dump(json_decode($result));
 
@@ -364,7 +403,7 @@ class Networksocket extends Backend
 	$netNamearray = ['dsafdds','kevin_test1','wkasas','wkere','wysds'];
 	// $netNamearray = ['dsaf','wy','admin','laoda','sbv'];
 
-        $result = $this -> Net_Delete($server_ip,$netNamearray);
+        $result = $this->Net_Delete($server_ip,$netNamearray);
 
         var_dump($result);      // String数据
         echo "<br>";
@@ -377,7 +416,7 @@ class Networksocket extends Backend
         // $nodeName = "JiuYang";
         // $configFile = "九阳123";
 
-        // $result = $this -> Node_Create($server_ip,$netName,$nodeName,$configFile);
+        // $result = $this->Node_Create($server_ip,$netName,$nodeName,$configFile);
 
         // var_dump($result);
         // echo "<br>";
@@ -389,7 +428,7 @@ class Networksocket extends Backend
         // $netName = "zwgk";
         // $nodeNamearray = ['JiuYang'];
 
-        // $result = $this -> Node_Delete($server_ip,$netName,$nodeNamearray);
+        // $result = $this->Node_Delete($server_ip,$netName,$nodeNamearray);
 
         // var_dump($result);      // String数据
         // echo "<br>";
