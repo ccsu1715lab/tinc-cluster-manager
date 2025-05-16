@@ -30,12 +30,9 @@ RUN apt-get update && \
 
 RUN apt-get update && apt-get install -y apache2 \
     php php-gd php-mysql libapache2-mod-php php-zip\
-    mysql-server curl
-
+    mysql-server curl systemctl
 
 COPY $SOUR_FAST /tmp/fastadmin.zip
-COPY $TIMER_DIR /timer
-COPY $SQL_DIR /data.sql
 
 RUN mkdir ${FAST_ROOT} && \
     apt-get install -y unzip && \
@@ -53,14 +50,16 @@ RUN mkdir ${FAST_ROOT} && \
     sed -i "s/upload_max_filesize.*/upload_max_filesize = 15M/" ${PHP_CONF} && \
     sed -i "s/post_max_size.*/post_max_size = 15M/" ${PHP_CONF} && \
     sed -i "s/zlib.output_compression = Off/zlib.output_compression = on/" ${PHP_CONF} && \
-    sed -i "s/;zlib.output_compression_level = -1/zlib.output_compression_level = 6/" ${PHP_CONF}
+    sed -i "s/;zlib.output_compression_level = -1/zlib.output_compression_level = 6/" ${PHP_CONF} && \
+    # 初始化 MySQL 数据目录（--user 指定运行用户）
+    # 启动 MySQL 并等待服务就绪（关键修复）
+    service mysql start && \
+    sleep 5 && \
+    # 修正密码参数格式（去掉引号，直接使用 -p密码）
+    mysql -u root -p123456 -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '123456'; FLUSH PRIVILEGES;"
 
-ADD start.sh /start.sh
-ADD stop.sh /stop.sh
-ADD init.sh /init.sh
-RUN chmod 777 /start.sh && chmod 777 /stop.sh && chmod 777 /init.sh
-
-
+# 容器启动时自动启动服务（保持原逻辑）
+CMD ["sh", "-c", "service apache2 start  && service mysql start && service mysql restart && tail -f /dev/null"]
 EXPOSE 80
 
 
