@@ -41,7 +41,6 @@ class Nodemanagement extends Backend
         $this->nodemodel = model($this->nodemodel_path);
         $this->netmodel = model($this->netmodel_path);
         //初始化用户基本信息
-        
         $auth = Auth::instance();
         $this->username = $auth->username;
         $this->log_operation_record['username']=$this->username;
@@ -56,7 +55,7 @@ class Nodemanagement extends Backend
         if($this->request->isAjax())
         {
         [$where, $sort, $order, $offset, $limit] = $this->buildparams();
-        $list = $this->nodemodel->where($where)->where('username',$this->username)->order($sort, $order)->paginate($limit);
+        $list = $this->nodemodel->where($where)->order($sort, $order)->paginate($limit);
         $result = ['total' => $list->total(), 'rows' => $list->items()];
         return json($result);
         }

@@ -42,7 +42,6 @@ class Singlenwdata extends Backend
                 ->field('id, server_name')
                 ->order('id ASC')
                 ->select();
-                
             return json(['code' => 1, 'msg' => '获取成功', 'data' => $servers]);
         } catch (Exception $e) {
             return json(['code' => 0, 'msg' => '获取服务器列表失败: ' . $e->getMessage()]);

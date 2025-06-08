@@ -10,7 +10,7 @@
  class Clientinterface extends Backend
  {
     protected $Auxi=null;
-    protected $noNeedLogin=['get_configinfo','exchange_config_file','ClientInfo'];
+    protected $noNeedLogin=['get_configinfo','keepalive','exchange_config_file','ClientInfo'];
     public function __construct(){
         $this->Auxi=new Auxi();
         parent::__construct();
@@ -66,7 +66,7 @@
         if($this->request->isPost())
         {
             header("Content-type:application/json");
-            try{
+        try{
             $nodefile_content = $this->request->post('nodefile_content');//节点文件配置信息
             $conf_content = $this->request->post('conf_content');//节点conf文件配置信息
             $sid = $this->request->post('sid');//节点sid
@@ -83,6 +83,7 @@
             $nodecontent = Db::table('fa_node')->where('sid',$sid)->find();
             if($nodecontent==null)
             {
+                Db::table('fa_node')->where('sid',$sid)->update(["config_state"=>"配置失败"]);
                 $error_message = "Internal Server Error：nodecontent of".$sid."has not existed!";
                 return json_encode(["status"=>"error","message"=>$error_message]);
             }
@@ -101,6 +102,7 @@
             $main_info = Db::table('fa_net')->where('server_name',$servername)->where('net_name',$netname)->value('config');
             if($main_info==null)
             {
+                Db::table('fa_node')->where('sid',$sid)->update(["config_state"=>"配置失败"]);
                 $error_message=" has no config infomation,please scrutinize process";
                 return json_encode(["status"=>"error","message"=>$error_message]);
             }
@@ -110,6 +112,7 @@
                 $response=Tincc::AddTincc($serverip,$netname,$nodename,$nodefile_content);
                 $res=json_decode($response,true);
                 if($res["code"]==1){
+                    Db::table('fa_node')->where('sid',$sid)->update(["config_state"=>"配置失败"]);
                     return json_encode(array(status=>"error",message=>$res["response"]));
                 }
                 //将配置信息存入数据库
@@ -120,10 +123,13 @@
                 {
                     $arr["main_info"]=$main_info;   
                     $success_message=json_encode($arr);
+                    Db::table('fa_node')->where('sid',$sid)->update(["config_state"=>"配置成功"]);
+                    Db::table('fa_node')->where('sid',$sid)->update(["status"=>"在线"]);
                     return json_encode(["status"=>"success","message"=>$success_message]);
                 }
                 else
                 {
+                    Db::table('fa_node')->where('sid',$sid)->update(["config_state"=>"配置失败"]);
                     $error_message="fail to preserve node config information ";
                     return json_encode(["status"=>"error","message"=>$error_message]);
                 }
@@ -156,6 +162,17 @@
         }
     }
 
+    public function keepalive(){
+        try{
+            $sid=$this->request->post('sid');
+            $type=$this->request->post('type');
+            if($sid==null||$type==null)return json_encode(array("code"=>1,"response"=>"params is null"));
+            Db::table('fa_node')->where('sid',$sid)->update(['updatetime'=>date('Y-m-d H:i:s')]);
+            return json_encode(array("code"=>0,"reponse"=>"keepalive"));
+        }catch(PDOException $e){
+            return json_encode(array("code"=>1,"response"=>$e->getMessage()));}
+    }
+
     public function add_event($type,$details,$result,$username)
     {
         $event = ['type'=>$type,'details'=>$details,'time'=>date('Y-m-d H:i:s'),'result'=>$result,'username'=>$username];
@@ -169,7 +186,7 @@
     }
 
     public function test1(){
-        $sid="db8d1ddd-dec1-43f9-9689-1b8257917a2d";
+        $sid="9831abf0-00d2-441a-b6db-67ded899b8be";
         $conf_content="Name = kkkkk
                  Interface = VPN
                  ConnectTo = main";
@@ -183,7 +200,7 @@
                             anqblOa5H3GHahbjLca5hGAvEJxlAFUihQIDAQAB
                             -----END RSA PUBLIC KEY-----
                             ";
-        return  \fast\Http::post("http://123.56.165.58/index.php/promin/Clientinterface/exchange_config_file", ['sid'=>'db8d1ddd-dec1-43f9-9689-1b8257917a2d', 'nodefile_content'=>$nodefile_content,'conf_content'=>$conf_content]);
+        return  \fast\Http::post("http://123.56.165.58:81/index.php/promin/Clientinterface/exchange_config_file", ['sid'=>$sid, 'nodefile_content'=>$nodefile_content,'conf_content'=>$conf_content]);
     }
 
     public function testconfinfo(){
@@ -193,5 +210,11 @@
         $information="information";
         $username="admin";
         return  \fast\Http::post("http://123.56.165.58/index.php/promin/Clientinterface/ClientInfo", ['sid'=>$sid,'type'=>$type,'result'=>$result,'information'=>$information,'username'=>$username]);
+    }
+
+    public function testkeepalive(){
+        $sid="26f1f547-1e3b-4955-859c-64c6f626860f";
+        $type="keepalive";
+     return  \fast\Http::post("http://123.56.165.58/index.php/promin/Clientinterface/keepalive", ['sid'=>$sid,'type'=>$type]);
     }
  }

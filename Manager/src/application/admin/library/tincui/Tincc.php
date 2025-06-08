@@ -1,11 +1,10 @@
 <?php
 
 namespace app\admin\library\tincui;
-use app\common\controller\Backend;
 use app\admin\library\tincui\Networksocket;
 use think\Db;
 use think\Exception;
-class Tincc extends Backend
+class Tincc
 {
     public $sid=null;
     public $password=null;
@@ -29,10 +28,12 @@ class Tincc extends Backend
     public $port=null;
     private $Template=null;
     private $JsonArray=null;
+    protected $noNeedRight = [
+        'AddTincc','SaveInfo','DelTincc','DelInfo'
+    ];
 
     public function __construct($sid,$password,$server_name,$PubIp,$PriIp,$net_name,$node_name,$username,$status,$updatetime,$desc,$config_state,$esbtime)
     {
-        parent::__construct();   
         $this->sid=$sid;
         $this->password=$password;
         $this->server_name=$server_name;

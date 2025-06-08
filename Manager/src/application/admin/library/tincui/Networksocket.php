@@ -16,6 +16,7 @@ class Networksocket
     // 守护进程所在服务器IP
     public $serverIP = NULL;
     protected $timeout = 5;// 默认超时时间为30秒
+    protected $noNeedRright = ['setTimeout','socketCommunication'];
 
     // 构造函数
     public function __construct()

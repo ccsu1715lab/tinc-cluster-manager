@@ -14,6 +14,9 @@ class Requestprocess extends Backend{
     protected $username = null;
     private $table_event = "fa_event";
     private $table_nodeonline = "fa_nodeonline";
+    protected $noNeedRight = [
+        'IsNetRepeat','IsPortRepeat','IsSegRepeat','GetNetsegmentPortByServername','GetnetnameByServername','GetSegmentByNet','IsipRepeat','IsnodenameRepeat','sidmatchpass','IsupdateSuccess','EventQuery','GetOnlinenodedata','updatenodeonlinestatus'
+    ];
     public function __construct()
     {
         //继承父类
@@ -137,7 +140,7 @@ class Requestprocess extends Backend{
     {
         $servername=$this->request->post('servername');
         if($servername == null)return null;
-        $seg=$this->netmodel->where('server_name',$servername)->where('username',$this->username)->column('net_name');
+        $seg=$this->netmodel->where('server_name',$servername)->column('net_name');
         return $seg;
     }
   }
@@ -266,7 +269,7 @@ class Requestprocess extends Backend{
   {
     if($this->request->isPost())
     {
-        $events=Db::table($this->table_event)->where('ifqueried',"no")->where('username',$this->username)->select();
+        $events=Db::table($this->table_event)->where('ifqueried',"no")->select();
         //将已查询的事件标记为已查询
         if($events!=null)
         {
@@ -325,7 +328,7 @@ class Requestprocess extends Backend{
   {
     $hour = date("H");
     $hour = intval($hour);
-    $list = $this->netmodel->where('username',$this->username)->select();//遍历所有内网
+    $list = $this->netmodel->select();//遍历所有内网
     if (count($list) == 0) return "暂无内网数据";
     else
     {

@@ -11,6 +11,7 @@ class Auxi{
     private $netmodel = null;
     private $nodemodel = null;
     private $table_log = "fa_log_operations";
+    protected $noNeedRright = ['IsNetRepeat','IsPortRepeat','IsNodeRepeat','occupyport','occupyseg','realiseport','realisesegment','IsSameNetInServer','IsSameNodeInNet','DelAllNodeInNet','GetServeripByServername'];
     public function __construct()
     {
         //实例化模型

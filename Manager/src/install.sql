@@ -11,8 +11,7 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 -- 文件开头区域添加 --
-SET GLOBAL event_scheduler = ON;
-SET @@global.event_scheduler = ON;
+SET  GLOBAL event_scheduler = ON;
 
 /* 关闭外键约束检查(如果有外键关系) */
 SET FOREIGN_KEY_CHECKS = 0;
@@ -45,7 +44,7 @@ DROP TABLE IF EXISTS `fa_nodeonline`;
 DROP TABLE IF EXISTS `fa_node_backup`;
 DROP TABLE IF EXISTS `fa_node`;
 DROP TABLE IF EXISTS `fa_port`;
-DROP TABLE IF EXISTS `fa_server`;
+DROP TABLE IF EXISTS `fa_serverfa_server`;
 DROP TABLE IF EXISTS `fa_serverstatus`;
 DROP TABLE IF EXISTS `fa_net_segment`;
 DROP TABLE IF EXISTS `fa_net`;
@@ -93,9 +92,10 @@ CREATE TABLE IF NOT EXISTS `fa_net` (
   `node_cnt` int(11) DEFAULT '0',
   `desc` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `esbtime` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `offline_time` datetime DEFAULT NULL COMMENT '离线时间',
-  `online_time` datetime DEFAULT NULL COMMENT '在线时间',
-  `keepalive_time` datetime DEFAULT NULL COMMENT '心跳时间',
+  -- 修复：显式声明NULL属性并优化keepalive_time默认值
+  `offline_time` datetime NULL DEFAULT NULL COMMENT '离线时间',
+  `online_time` datetime NULL DEFAULT NULL COMMENT '在线时间',
+  `keepalive_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '心跳时间（默认当前时间）',
   `port` int(255) DEFAULT NULL COMMENT '内网端口号',
   `server_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `server_ip` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -124,7 +124,8 @@ CREATE TABLE IF NOT EXISTS `fa_node` (
   `net_name` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
   `username` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
   `user_flag` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
-  `status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '已下线' COMMENT '节点状态（已上线，已下线',
+  -- 修改：初始状态改为"连接断开"，状态描述调整为"连接正常，连接断开"
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '连接断开' COMMENT '节点状态（连接正常，连接断开）',
   `updatetime` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
   `config` varchar(1000) CHARACTER SET utf8mb4 DEFAULT NULL,
   `uptime` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
@@ -292,20 +293,20 @@ CREATE TABLE IF NOT EXISTS `fa_network_status_log` (
 
 
 /* 创建触发器 */
-DELIMITER $$
+DELIMITER $$  -- 临时修改语句分隔符为 $$
 
 /* 创建 del 触发器 */
 CREATE TRIGGER `del` AFTER DELETE ON `fa_node` FOR EACH ROW 
 BEGIN
-    DELETE FROM fa_node_backup WHERE sid = old.sid;
-END$$
+    DELETE FROM fa_node_backup WHERE sid = old.sid;  -- 触发器逻辑（内部用 ; 不冲突）
+END$$  -- 触发器结束，用 $$ 标记
 
 /* 创建 infobackup 触发器 */
 CREATE TRIGGER `infobackup` AFTER INSERT ON `fa_node` FOR EACH ROW 
 BEGIN
     INSERT INTO fa_node_backup (node_name, node_ip, id_foreign, sid) 
     VALUES (new.node_name, new.node_ip, new.id, new.sid);
-END$$
+END$$  -- 触发器结束，用 $$ 标记
 
 /* 创建 tr_net_status_offline_update_downtime 触发器 */
 CREATE TRIGGER `tr_net_status_offline_update_downtime` 
@@ -315,6 +316,10 @@ BEGIN
     /* 当状态从"在线"变为"离线"时，更新down_time字段 */
     IF OLD.`status` = '在线' AND NEW.`status` = '离线' THEN
         SET NEW.offline_time = NOW();
+    END IF;
+    /* 当状态由"离线"变为"在线"时，更新online_time字段 */
+    IF OLD.`status` = '离线' AND NEW.`status` = '在线' THEN
+        SET NEW.online_time = NOW();
     END IF;
 END$$
 
@@ -387,7 +392,7 @@ BEGIN
     END IF;
 END$$
 
-DELIMITER $$
+/*DELIMITER $$*/
 CREATE TRIGGER network_status_change_trigger
 AFTER UPDATE ON fa_net
 FOR EACH ROW
@@ -398,13 +403,10 @@ BEGIN
     END IF;
 END$$
 
-DELIMITER ;
+/*DELIMITER ;*/
 
-/* 检查事件调度器是否开启 */
-SET @event_scheduler_status = (SELECT @@event_scheduler);
-SET GLOBAL event_scheduler = ON;
 
-DELIMITER $$
+DELIMITER $$  -- 临时修改分隔符为 $$
 
 /* 创建节点状态更新事件 */
 CREATE EVENT `update_node_status`
@@ -418,8 +420,8 @@ BEGIN
             WHEN TIMESTAMPDIFF(SECOND, STR_TO_DATE(updatetime, '%Y-%m-%d %H:%i:%s'), NOW()) > 10 
             THEN '连接断开' 
             ELSE '连接正常' 
-        END;
-END$$
+        END;  -- 补充 CASE 表达式的 END 关键字
+END$$  -- 事件结束，用 $$ 标记
 
 /* 创建网络状态更新事件 */
 CREATE EVENT `update_net_status`
@@ -434,7 +436,7 @@ BEGIN
             THEN '离线' 
             ELSE '在线' 
         END;
-END$$
+END$$  -- 事件结束，用 $$ 标记
 
 /* 创建自动清理旧记录的事件 */
 CREATE EVENT `delete_old_records_event`
@@ -492,12 +494,12 @@ BEGIN
         NOW(),
         1
     );
-END$$
+END$$  -- 事件结束，用 $$ 标记
 
-DELIMITER ;
+DELIMITER ;  -- 恢复默认分隔符为 ;
 
 /* 恢复事件调度器状态（如果之前是关闭的） */
-SET GLOBAL event_scheduler = @event_scheduler_status;
+-- 检查变量是否为 NULL，若为 NULL 则默认恢复为 ON
 
 /* 开启外键约束检查 */
 SET FOREIGN_KEY_CHECKS = 1;

@@ -1,33 +1,33 @@
 <style>
     /* 新增全局样式 */
     body {
-        background: linear-gradient(135deg, #f3f7ff 0%, #e8f1ff 100%);
+        background: linear-gradient(135deg, #ebf5ff 0%, #d6eaff 100%); /* 修改背景渐变 */
         font-family: 'Segoe UI', system-ui;
     }
 
     .panel-intro {
-        background: rgba(255,255,255,0.86);
-        border-radius: 12px;
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(208,222,255,0.5);
-        box-shadow: 0 12px 40px rgba(15,82,186,0.1);
+        background: rgba(255,255,255,0.9); /* 调整面板背景透明度 */
+        border-radius: 16px; /* 增大圆角 */
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(208,222,255,0.6); /* 调整边框颜色 */
+        box-shadow: 0 10px 30px rgba(15,82,186,0.08); /* 修改阴影效果 */
     }
 
     /* 标题优化 */
     #title h2 {
-        color: #1a3658;
-        font-weight: 600;
-        text-shadow: 0 2px 4px rgba(15,82,186,0.1);
-        background: linear-gradient(90deg, #1a4d8f, #2c6ed5);
+        color: #163152; /* 调整标题颜色 */
+        font-weight: 700; /* 加粗字体 */
+        text-shadow: 0 3px 5px rgba(15,82,186,0.08); /* 调整阴影效果 */
+        background: linear-gradient(90deg, #164280, #2763c7);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
     /* 表格增强 */
     .table {
-        --table-accent: rgba(208,222,255,0.1);
-        --table-hover: rgba(64,150,255,0.08);
-        border: 1px solid rgba(208,222,255,0.3);
+        --table-accent: rgba(208,222,255,0.08); /* 调整表格底色 */
+        --table-hover: rgba(64,150,255,0.05); /* 调整hover颜色 */
+        border: 1px solid rgba(208,222,255,0.2); /* 调整边框颜色 */
     }
 
     .table-striped > tbody > tr:nth-of-type(odd) {
@@ -36,36 +36,39 @@
 
     .table-hover > tbody > tr:hover {
         background-color: var(--table-hover);
-        transform: scale(1.002);
-        box-shadow: 0 4px 12px rgba(15,82,186,0.05);
+        transform: scale(1.005); /* 稍微增大hover时的缩放 */
+        box-shadow: 0 4px 12px rgba(15,82,186,0.04); /* 调整阴影效果 */
     }
 
     /* 按钮组重构 */
     .btn {
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 8px;
-        letter-spacing: 0.5px;
+        border-radius: 10px; /* 增大圆角 */
+        letter-spacing: 0.6px;
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #2c6ed5 0%, #1a4d8f 100%);
+        background: linear-gradient(135deg, #2763c7 0%, #164280 100%); /* 调整渐变色 */
         border: none;
+        box-shadow: 0 4px 8px rgba(15,82,186,0.1); /* 增加阴影 */
     }
 
     .btn-success {
-        background: linear-gradient(135deg, #2c6ed5 0%, #4096ff 100%);
+        background: linear-gradient(135deg, #2763c7 0%, #3b88f0 100%); /* 调整渐变色 */
         border: none;
+        box-shadow: 0 4px 8px rgba(15,82,186,0.1); /* 增加阴影 */
     }
 
     .btn-danger {
-        background: linear-gradient(135deg, #ff4d4d 0%, #cc3636 100%);
+        background: linear-gradient(135deg, #ff3d3d 0%, #bb2d2d 100%); /* 调整渐变色 */
         border: none;
+        box-shadow: 0 4px 8px rgba(15,82,186,0.1); /* 增加阴影 */
     }
 
     /* 图标优化 */
     .fa {
         margin-right: 8px;
-        filter: drop-shadow(0 2px 2px rgba(15,82,186,0.1));
+        filter: drop-shadow(0 2px 3px rgba(15,82,186,0.08)); /* 调整阴影 */
     }
 </style>
 
@@ -74,7 +77,7 @@
         <div class="tab-pane fade active in">
             <div class="widget-body no-padding">
             <div  id="title" style="text-align: center;">
-                <h2 style="font-weight:600">Tinc服务端</h2>
+                <h2 style="font-weight:600">Tinc内网集群管理</h2>
                 <div style="margin:1rem auto; width:120px; height:3px; background:linear-gradient(90deg, rgba(208,222,255,0.5), #2c6ed5, rgba(208,222,255,0.5));"></div>
             </div>
             <div id="toolbar" class="toolbar">

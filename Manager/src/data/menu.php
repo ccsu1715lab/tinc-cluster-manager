@@ -1,36 +1,36 @@
 <?php
 
 $menu = [
+    [
+        'name'   => 'tincui/servermanagement',
+        'title'  => '服务器集群管理',
+        'icon'   => 'fa fa-gears',
+        'ismenu' => 1,
+    ],
         [
-            'name'   => 'tincui/Singlenwdata',
-            'title'  => '单网数据可视化',
+            'name'   => 'tincui/singlenwdata',
+            'title'  => '单网监控面板',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],
         [
-            'name'   => 'tincui/Nwdata',
+            'name'   => 'tincui/nwdata',
             'title'  => '网络集群数据可视化',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],
         [
             'name'   => 'tincui/netmanagement',
-            'title'  => 'Tinc服务端',
+            'title'  => 'Tinc内网集群管理',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],
         [
             'name'   => 'tincui/nodemanagement',
-            'title'  => 'Tinc客户端',
+            'title'  => 'Tinc节点集群管理',
             'icon'   => 'fa fa-gears',
             'ismenu' => 1,
         ],  
-        [
-           'name'   => 'tincui/events',
-           'title'  => '事件查询',
-           'icon'   => 'fa fa-gears',
-           'ismenu' => 1,
-       ],
 
    
 ];

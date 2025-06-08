@@ -1,11 +1,10 @@
 <?php
 
 namespace app\admin\library\tincui;
-use app\common\controller\Backend;
 use app\admin\library\tincui\Networksocket;
 use think\Db;
 use think\Exception;
-class Tincs extends Backend
+class Tincs
 {
     public $ServerName=null;
     public $PubIp=null;
@@ -23,10 +22,12 @@ class Tincs extends Backend
     public $Token=null;
     private $Template=null;
     private $JsonArray=null;
+    protected $noNeedRight = [
+        'GetDailyOnlineRate','GetDailyDisrupScore','GetDailyRevScore','GetDailyHealScore','GetDailyOnlineRateScore','GetDailyRevScore','GetDailyDisrupScore'
+    ];
 
     public function __construct($ServerName,$Network,$PubIp=null,$PriIp=null,$Port=null,$Username=null,$Desc=null)
-    {
-        parent::__construct();   
+    { 
         $this->ServerName=$ServerName;
         $this->PubIp=$PubIp;
         $this->Network=$Network;
@@ -271,12 +272,19 @@ class Tincs extends Backend
     public function GetCurHealScore()
     {
         try{
+            #在线得分
+            if(Db::table('fa_net')->where('server_name',$this->ServerName)->where('net_name',$this->Network)->value('status')=='在线'){
+                $OnlineScore=100;
+            }else{
+                return json_encode(array('code'=>0,'response'=>0)); // 离线时直接返回0分
+            }
             #流量得分
             $TrafficRes=json_decode($this->GetCurTrafficSocre(),true);
             if($TrafficRes['code']==1){
                 return json_encode(array('code'=>1,'response'=>$TrafficRes['response']));
             }
             $TrafficScore=$TrafficRes['response'];
+
             #响应时间得分
             $ResponseTimeRes=json_decode($this->GetCurResTime(),true);
             if($ResponseTimeRes['code']==1){
@@ -285,13 +293,10 @@ class Tincs extends Backend
             $ResponseTimeScore=$ResponseTimeRes['response'];
             $MaxReScore=200;//最大响应时间为200ms
             $ResponseTimeScore=round((1-($ResponseTimeScore/$MaxReScore))*100);
-            #在线得分
-            if(Db::table('fa_net')->where('server_name',$this->ServerName)->where('net_name',$this->Network)->value('status')=='在线'){
-                $OnlineScore=100;
-            }else $OnlineScore=0;
+
             #健康得分
             $HealScore=round($OnlineScore*0.2+$TrafficScore*0.4+$ResponseTimeScore*0.4);
-            return json_encode(array('code'=>0,'response'=>$HealScore));
+            return json_encode(array('code'=>0,'response'=>array('OnlineScore'=>$OnlineScore,'TrafficScore'=>$TrafficScore,'ResponseTimeScore'=>$ResponseTimeScore,'HealScore'=>$HealScore)));
         }catch(Exception $e){
             return json_encode(array('code'=>1,'response'=>$e->getMessage()));
         }

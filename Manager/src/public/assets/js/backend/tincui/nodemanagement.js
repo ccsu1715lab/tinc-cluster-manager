@@ -15,6 +15,31 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
     var EventQuery_url = 'tincui/Requestprocess/EventQuery';
     var Controller={
         index: function(){
+            // ... existing code ...
+
+// 自动触发刷新按钮点击事件
+function autoTriggerRefresh() {
+    // 获取带有btn-refresh类名的元素
+    const refreshButton = document.querySelector('.btn-refresh');
+    
+    // 如果找到了按钮元素
+    if (refreshButton) {
+        // 设置定时器，每10秒触发一次点击事件
+        setInterval(() => {
+            refreshButton.click();
+        }, 10000); // 10000毫秒 = 10秒
+    } else {
+        console.warn('未找到刷新按钮元素');
+    }
+}
+autoTriggerRefresh();
+
+// 页面加载完成后启动自动刷新
+document.addEventListener('DOMContentLoaded', () => {
+    autoTriggerRefresh();
+});
+
+// ... existing code ...
             var EventQueryTimer=null;  
             //事件查询定时器回调函数
             function TimerCall_EventQuery()
@@ -98,6 +123,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
                     [
                         {checkbox: true},
                         {field: 'id',title: 'ids'},
+                        {field: 'username',title: '用户'},
                         {field: 'sid',title: '设备ID'},
                         {field: 'server_name',title: '服务器'},
                         {
@@ -112,8 +138,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
                         {field: 'esbtime',title: '创建时间'},
                         {field: 'status',title: '节点状态'},
                         {field: 'config_state',title: '配置状态'},
-                        {field: 'uptime',title: '最近上线时间'},
-                        {field: 'downtime',title: '最近下线时间'},
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate,
                                                                                                                         buttons:[
                                                                                                                         

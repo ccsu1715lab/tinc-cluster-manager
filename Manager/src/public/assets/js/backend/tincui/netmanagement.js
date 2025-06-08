@@ -32,6 +32,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'],function($,undefined,
                     [
                         {checkbox: true},
                         {field: 'id',title: 'ids'},
+                        {field: 'username',title: '用户'},
                         {field: 'server_name',title:'接入服务器'},
                         {field: 'net_name',title: '内网名称'},
                         {field: 'esbtime',title: '创建时间'},

@@ -1,0 +1,61 @@
+<form id="add-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="">
+
+    <div class="form-group">
+        <label for="c-server_name" class="col-xs-12 col-sm-2 control-label">服务器名称:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-server_name" type="text" name="row[server_name]" class="form-control" data-rule="required;">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-server_ip" class="col-xs-12 col-sm-2 control-label">服务器ip:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-server_ip" type="text" name="row[server_ip]" class="form-control"
+                   data-rule="required;unrenode">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-start_segment" class="col-xs-12 col-sm-2 control-label">起始网段:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-start_segment" type="text" name="row[start_segment]" class="form-control" data-rule="required;unrenode">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-end_segment" class="col-xs-12 col-sm-2 control-label">终止网段:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-end_segment" type="text" name="row[end_segment]" class="form-control" data-rule="required;unrenode">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-start_port" class="col-xs-12 col-sm-2 control-label">起始端口:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-start_port" type="text" name="row[start_port]" class="form-control" data-rule="required;unrenode">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-end_port" class="col-xs-12 col-sm-2 control-label">终止端口:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-end_port" type="text" name="row[end_port]" class="form-control" data-rule="required;unrenode">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="c-desc"class="col-xs-12 col-sm-2 control-label">备注:</label>
+        <div class="col-xs-12 col-sm-8">
+            <textarea id="c-desc" data-rule=""  name="row[desc]" class="form-control"></textarea>
+        </div>
+    </div>
+
+
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-success btn-embossed disabled btn-success-add">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>

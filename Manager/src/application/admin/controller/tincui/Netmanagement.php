@@ -14,10 +14,10 @@ class Netmanagement extends Backend
     private $username=null; //用户名
     private $netmodel=null;
     private $nodemodel=null;
-    private $netmodelpath = "app\admin\model\\tincui\Net";
-    private $nodemodelpath = "app\admin\model\\tincui\Node";
     private $servers_added=null;//已添加的服务器集群
     private $servertable='fa_server';//服务器表名
+    private $netmodel_path = "app\admin\model\\tincui\Net";
+    private $nodemodel_path = "app\admin\model\\tincui\Node";
     private $auxi = null;
     private $this_log_type_add = "内网添加";
     private $this_log_type_del = "删除内网";
@@ -41,8 +41,8 @@ class Netmanagement extends Backend
         $auth=Auth::instance();
         $this->username=$auth->username;
         //实例化模型
-        $this->netmodel=model($this->netmodelpath);
-        $this->nodemodel=model($this->nodemodelpath);
+        $this->netmodel = model($this->netmodel_path);
+        $this->nodemodel = model($this->nodemodel_path);
         //实例化辅助功能接口
         $this->auxi=new Auxi();
         //初始化操作日志、
@@ -61,7 +61,7 @@ class Netmanagement extends Backend
         {
         [$where, $sort, $order, $offset, $limit] = $this->buildparams();
         $list = $this->netmodel
-        ->where($where)->where('username',$this->username)
+        ->where($where)
         ->order($sort, $order)
         ->paginate($limit);
          $result = ['total' => $list->total(), 'rows' => $list->items()];
